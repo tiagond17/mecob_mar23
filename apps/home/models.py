@@ -15,8 +15,8 @@ Copyright (c) 2019 - present AppSeed.us
 from . import existing_models
 
 class ConsolidadoVendedor(models.Model):
-    contrato = models.ForeignKey(existing_models.Contratos, verbose_name=_(""), on_delete=models.CASCADE)
-    parcelas = models.ForeignKey(existing_models.ContratoParcelas, verbose_name=_(""), on_delete=models.CASCADE)
+    contrato = models.ForeignKey(existing_models.Contratos(""), on_delete=models.CASCADE)
+    parcelas = models.ManyToManyField(existing_models.ContratoParcelas)
 
     class Meta:
         verbose_name = _("ConsolidadoVendedor")
