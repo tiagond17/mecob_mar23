@@ -180,3 +180,6 @@ if GITHUB_AUTH:
             'key': ''
         }
     }
+
+#*Solução para o erro de (models.W042) abaixo
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

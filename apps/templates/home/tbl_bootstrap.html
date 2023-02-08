@@ -103,9 +103,14 @@
                           </tr>
                         </thead>
                         <tbody>
-													{% for dado in result %}
-														<tr>{{dado}}</tr>
-													{% endfor %}
+													{% for contrato_parcelas in contratos_parcelas %}
+                          <tr>
+                            <th>{{forloop.counter}}</th>
+                            <td>Contrato ID:{{contrato_parcelas.contratos_id}}</td>
+                            <td>Contrato ID:{{contrato_parcelas.dt_vencimento}}</td>
+                            <td>Contrato ID:{{contrato_parcelas.vl_parcela}}</td>
+                          </tr>
+                          {% endfor %}
                           {% comment %} {% for dado in result %}
                           <th>{{forloop.count}}</th>
                           <th>{{dado}}
