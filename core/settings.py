@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'apps.home',                                    # Enable the inner home (home)
+    'django_extensions',
     'allauth',                                      # OAuth new
     'allauth.account',                              # OAuth new
     'allauth.socialaccount',                        # OAuth new 
@@ -91,7 +92,7 @@ if os.environ.get('DB_ENGINE') and os.environ.get('DB_ENGINE') == "mysql":
       'default': {
         'ENGINE'  : 'django.db.backends.mysql', 
         'NAME'    : os.getenv('DB_NAME'     , 'appseed_db'),
-        'USER'    : os.getenv('DB_USERNAME' , 'appseed_db_usr'),
+        'USER'    : os.getenv('DB_USERNAME' , 'root'),
         'PASSWORD': os.getenv('DB_PASS'     , 'pass'),
         'HOST'    : os.getenv('DB_HOST'     , 'localhost'),
         'PORT'    : os.getenv('DB_PORT'     , 3306),
@@ -104,12 +105,18 @@ else:
             'NAME': 'db.sqlite3',
         }
     }
+    
+""" TODO:
+DATABASES = {
+    "default":dj_database_url.config(default='postgresql://postgres:admin@localhost:5432/desapeguei_project_db',conn_max_age=600)
+}"""
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
+]
+""" {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
@@ -120,8 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+    }, """
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/

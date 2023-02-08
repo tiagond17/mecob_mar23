@@ -41,7 +41,10 @@ def register_user(request):
             form.save()
             username = form.cleaned_data.get("username")
             raw_password = form.cleaned_data.get("password1")
+            #User.objects.create(username=username, password=raw_password) ???
             user = authenticate(username=username, password=raw_password)
+            #ao fazer a autenticação ele já é logado no sistema ?
+            #se não for, utilizar o metodo login()
 
             msg = 'User created successfully.'
             success = True
