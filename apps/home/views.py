@@ -9,8 +9,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 
-from django.db import connection
-from .models import ContratoParcela
+from .existing_models import Contratos
 
 
 @login_required(login_url="/login/")
@@ -24,7 +23,7 @@ def index(request):
 
 @login_required(login_url="/login/")
 def pages(request):
-    context = {'contratos_parcelas': ContratoParcela.objects.all()[:30]}
+    context = {'contratos': Contratos.objects.all()[:30]}
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
     try:

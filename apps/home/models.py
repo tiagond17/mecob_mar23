@@ -8,24 +8,19 @@ from django.utils.translation import gettext_lazy as _
 Copyright (c) 2019 - present AppSeed.us
 """
 
+#*consolidado_vendedor, nome sugerido por Tiago para nova tabela utilizando os dados de contratos e contrato_parcelas
+#TODO:  selecionar o que vendedo e totalizar quanto ele tem para recebe entre agosto/22
+#! Colocar uma feature em que é possivel filtrar por data de vencimento
+
 from . import existing_models
 
-class ContratoParcela(models.Model):
-    contratos_id = models.IntegerField()
-    dt_vencimento = models.DateField()
-    vl_parcela = models.DecimalField()
-    dt_credito = models.DateField()
-    nu_parcela = models.PositiveIntegerField()
-
+class ConsolidadoVendedor(models.Model):
+    contrato = models.ForeignKey(existing_models.Contratos, verbose_name=_(""), on_delete=models.CASCADE)
+    parcelas = models.ForeignKey(existing_models.ContratoParcelas, verbose_name=_(""), on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = _("ContratoParcela")
-        verbose_name_plural = _("ContratoParcelas")
-        managed=False
-        db_table='contrato_parcelas'
-
-    def __str__(self):
-        return f'Model ID:{self.pk}, ContratoID: {self.contratos_id}'
+        verbose_name = _("ConsolidadoVendedor")
+        verbose_name_plural = _("ConsolidadoVendedors")
 
     def get_absolute_url(self):
-        return reverse("ContratoParcela_detail", kwargs={"pk": self.pk})
+        return reverse("ConsolidadoVendedor_detail", kwargs={"pk": self.pk})
