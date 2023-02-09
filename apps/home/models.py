@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-
+#TODO: Remover o CDN do bootstrap do html_base
 #*consolidado_vendedor, nome sugerido por Tiago para nova tabela utilizando os dados de contratos e contrato_parcelas
 #TODO:  selecionar o que vendedo e totalizar quanto ele tem para recebe entre agosto/22
 #! Colocar uma feature em que é possivel filtrar por data de vencimento
@@ -15,7 +15,7 @@ Copyright (c) 2019 - present AppSeed.us
 from . import existing_models
 
 class ConsolidadoVendedor(models.Model):
-    contrato = models.ForeignKey(existing_models.Contratos(""), on_delete=models.CASCADE)
+    contrato = models.ForeignKey(existing_models.Contratos, on_delete=models.DO_NOTHING)
     parcelas = models.ManyToManyField(existing_models.ContratoParcelas)
 
     class Meta:

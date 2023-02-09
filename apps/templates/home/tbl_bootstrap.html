@@ -1,5 +1,10 @@
 {% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %}
 
+{% load utils %}
+{% load humanize %}
+
+{% load static %}
+
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} {% block content %}
 
@@ -145,17 +150,24 @@
               <!-- [ Hover-table ] end -->
 
 
-              <h1>Tabela porem mais funcional</h1>
+              <h1>DataTable</h1>
               <!-- [ Hover-table ] start -->
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
                     <h5>Hover Table</h5>
-                    <p>filtrar de <input type="date" name="" id=""> até <input type="date" name="" id=""> <button class="btn btn-primary">Filtrar</button> </p>
+                    <form action="{% url 'home:consulta_por_data' %}" method="post">
+                      {% csrf_token %}
+                      <p>filtrar de 
+                        <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
+                         até 
+                        <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
+                        <button class="btn btn-primary">Filtrar</button> 
+                        <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                      </p>
+                    </form>
                     <span class="d-block m-t-5"
-                      >use class <code>table-hover</code> inside table
-                      element</span
-                    >
+                      >use class <code>table-hover</code> inside table element</span>
                   </div>
                   <div class="card-block table-border-style">
                     <div class="table-responsive">
@@ -163,9 +175,11 @@
                         <thead>
                           <tr>
                             <th>#</th>
-                            <th>Quantidade de parcelas</th>
+                            <th>QTD. de parcelas</th>
                             <th>Vendedor</th>
                             <th>Comprador</th>
+                            <th>Valor da parcela</th>
+                            <th>Valor total</th>
                             <th>Descricao</th>
                           </tr>
                         </thead>
@@ -176,6 +190,8 @@
                             <td>{{contrato.parcelas.count}}</td>
                             <td>{{contrato.vendedor}}</td>
                             <td>{{contrato.comprador}}</td>
+                            <th>R${{contrato.parcelas.first.vl_parcela|intcomma}}</th>
+                            <td>R${{contrato.parcelas.all|sum_objects_value|intcomma}}</td>
                             <td>{{contrato.descricao}}</td>
                           </tr>
                           {% endfor %}

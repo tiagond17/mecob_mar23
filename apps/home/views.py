@@ -14,7 +14,6 @@ from .existing_models import Contratos
 
 @login_required(login_url="/login/")
 def index(request):
-    # *apenas para testes, é altamente recomendavel mapear as tabelas em modelos no Django
     context = {'segment': 'index'}
 
     html_template = loader.get_template('home/index.html')
@@ -48,3 +47,11 @@ def pages(request):
     except:
         html_template = loader.get_template('home/page-500.html')
         return HttpResponse(html_template.render(context, request))
+
+#no mes de setembro quero ver os vendedores em aberto, os contratos
+#filtro pela data de vencimento dia 1 do 8 ate 21 do 8
+
+def consulta_por_data(request):
+    if request.method == 'POST':
+        return HttpResponse("<h1>POST</h1>")
+    return HttpResponse('<h1>GET</h1>')
