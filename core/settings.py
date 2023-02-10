@@ -42,11 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.home',                                    # Enable the inner home (home)
     'django_extensions',
+    'widget_tweaks',
     'allauth',                                      # OAuth new
     'allauth.account',                              # OAuth new
-    'allauth.socialaccount',                        # OAuth new 
-    'allauth.socialaccount.providers.github',       # OAuth new 
-    'allauth.socialaccount.providers.twitter',      # OAuth new  
+    'allauth.socialaccount',                        # OAuth new
+    'allauth.socialaccount.providers.github',       # OAuth new
+    'allauth.socialaccount.providers.twitter',      # OAuth new
     "sslserver"    
 ]
 
@@ -133,7 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'UTC'
 

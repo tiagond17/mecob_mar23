@@ -49,7 +49,7 @@ class Arquivos(models.Model):
     nm_arq = models.CharField(max_length=100, blank=True, null=True)
     dt_arq = models.DateTimeField(blank=True, null=True)
     tp_arq = models.CharField(max_length=45, blank=True, null=True)
-    contratos = models.ForeignKey('Contratos', models.DO_NOTHING, blank=True, null=True)
+    contratos = models.ForeignKey('Contratos', models.DO_NOTHING, blank=True, null=True, related_name='arquivos_contratos')
     status = models.CharField(max_length=100, blank=True, null=True)
     dt_envio_banco = models.DateTimeField(blank=True, null=True)
     log = models.TextField(blank=True, null=True)
@@ -57,6 +57,9 @@ class Arquivos(models.Model):
     origem = models.CharField(max_length=45, blank=True, null=True)
     pessoas_id_envio = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_envio', blank=True, null=True, related_name='arquivos_pessoas_id_envio')
     boletos_avulso = models.ForeignKey('BoletosAvulso', models.DO_NOTHING, blank=True, null=True, related_name='arquivos_boletos_avulso')
+    
+    def __str__(self) -> str:
+        return f'{self.id} - {self.nm_arq}'
 
     class Meta:
         managed = False
@@ -105,9 +108,9 @@ class ContratoParcelas(models.Model):
     liquidada_no_cadastro = models.CharField(max_length=45, blank=True, null=True)
     simulada = models.CharField(max_length=45, blank=True, null=True)
     dt_vencimento_original = models.DateField(blank=True, null=True)
-    arquivos_id_remessa = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_remessa', blank=True, null=True, related_name='arquivos_id_remessa')
+    arquivos_id_remessa = models.ForeignKey(Arquivos, models.DO_NOTHING,related_name='arquivos_id_remessa' , db_column='arquivos_id_remessa', blank=True, null=True)
     nu_linha_remessa = models.IntegerField(blank=True, null=True)
-    arquivos_id_retorno = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno', blank=True, null=True, related_name='arquivos_id_retorno')
+    arquivos_id_retorno = models.ForeignKey(Arquivos, models.DO_NOTHING,related_name='arquivos_id_retorno' , db_column='arquivos_id_retorno', blank=True, null=True)
     nu_linha_retorno = models.CharField(max_length=45, blank=True, null=True)
     dt_credito = models.DateField(blank=True, null=True)
     dt_processo_pagto = models.DateTimeField(blank=True, null=True)
@@ -127,7 +130,6 @@ class ContratoParcelas(models.Model):
     class Meta:
         managed = False
         db_table = 'contrato_parcelas'
-
 
 class Contratos(models.Model):
     descricao = models.CharField(max_length=500, blank=True, null=True)
@@ -170,8 +172,9 @@ class Contratos(models.Model):
     fiador = models.TextField(blank=True, null=True)
     animal = models.TextField(blank=True, null=True)
     
+    
     def __str__(self):
-        return f'vendedor: {self.vendedor}, comprador: {self.comprador}, n°s parcelas: {self.nu_parcelas}'
+        return f'vendedor: {self.vendedor}, comprador: {self.comprador}, n°s parcelas: {self.parcelas.count()}'
 
     class Meta:
         managed = False
@@ -190,9 +193,12 @@ class DadosArquivoRetorno(models.Model):
     vl_juros = models.DecimalField(max_digits=13, decimal_places=2, blank=True, null=True)
     dt_credito = models.DateField(blank=True, null=True)
     motivo_ocorrencia = models.CharField(max_length=45, blank=True, null=True)
-    arquivos = models.ForeignKey(Arquivos, models.DO_NOTHING)
+    arquivos = models.ForeignKey(Arquivos, models.DO_NOTHING, related_name='dados_arquivo_retorno')
     nu_linha = models.IntegerField(blank=True, null=True)
     fl_processado = models.CharField(max_length=45, blank=True, null=True)
+    
+    def __str__(self):
+        return f'valor pago: {self.vl_pago}, data de pagamento: {self.dt_credito}'
 
     class Meta:
         managed = False
@@ -216,6 +222,10 @@ class Eventos(models.Model):
     leiloeiro = models.ForeignKey('Pessoas', models.DO_NOTHING)
     dt_evento = models.DateField()
     tipo = models.CharField(max_length=200, db_collation='utf8mb3_general_ci')
+    
+    def __str__(self):
+        return f'nome: {self.nome}, leiloeiro: {self.leiloeiro}'
+        
 
     class Meta:
         managed = False
