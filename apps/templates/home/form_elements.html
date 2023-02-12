@@ -1,6 +1,7 @@
 {% extends "layouts/base.html" %} 
 {% block title %} UI Forms {% endblock %}
 {% load widget_tweaks %}
+{% load utils %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -16,6 +17,7 @@
           <div class="page-block">
             <div class="row align-items-center">
               <div class="col-md-12">
+                
                 <div class="page-header-title">
                   <h5 class="m-b-10">Form Elements</h5>
                 </div>
@@ -30,6 +32,77 @@
                     <a href="javascript:">Form Elements</a>
                   </li>
                 </ul>
+                <div class="col-xl-12">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5>Hover Table</h5>
+                      <form action="" method="post">
+                        {% csrf_token %}
+                        <p>filtrar de 
+                          <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
+                           até 
+                          <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
+                          <button class="btn btn-primary">Filtrar</button> 
+                          <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                        </p>
+                      </form>
+                      <span class="d-block m-t-5"
+                        >use class <code>table-hover</code> inside table element</span>
+                    </div>
+                    <div class="card-block table-border-style">
+                      <div class="table-responsive">
+                        <table id="table-cad-cliente" class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>ID Vendedor (MODEL)</th>
+                              <th>Nome</th>
+                              <th>Código</th>
+                              <th>SIm</th>
+                              <th>Não</th>
+                              <th>Operacional</th>
+                              <th>TCC</th>
+                              <th>Honorarios</th>
+                              <th>Animal</th>
+                              <th>Evento</th>
+                              <th>Informar Repasses</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for cad_cliente in cad_clientes %}
+                              <tr>
+                                <th>{{cad_cliente.nome}}</th>
+                                <th>{{cad_cliente.nome}}</th>
+                                <td>{{cad_cliente.codigo}}</td>
+                                <td>{{cad_cliente.sim}}</td>
+                                <td>{{cad_cliente.nao}}</td>
+                                <td>{{cad_cliente.operacional}}</td>
+                                <td>{{cad_cliente.tcc}}</td>
+                                <td>{{cad_cliente.honorarios}}</td>
+                                <td>{{cad_cliente.animal}}</td>
+                                <td>{{cad_cliente.evento}}</td>
+                                <td>{{cad_cliente.informar_repasse}}</td>
+                              </tr>
+                            {% endfor %}
+                            {% comment %} 
+                            <tr>
+                              <th>1</th>
+                              <td>Roger Luiz de Oliveira Costa</td>
+                              <td>689</td>
+                              <td>3,00%</td>
+                              <td>20%</td>
+                              <td>5%</td>
+                              <td>1%</td>
+                              <td>3%</td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                            </tr> {% endcomment %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -42,13 +115,14 @@
               <div class="col-sm-12">
 
 
-
 							<div class="card">
 								<div class="card-header">
-									<h5>Basic Componant</h5>
+									<h5>Basic Componet</h5>
 								</div>
 								<div class="card-body">
-									<h5>Form controls</h5>
+                  <h5>Form controls</h5>
+                  <h1>CadCliente</h1>
+                  
 									<hr />
 									<div class="row">
                     <div class="col-md-6">
@@ -758,4 +832,10 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-cad-cliente').DataTable();
+  })
+</script>
+{% endblock javascripts %}

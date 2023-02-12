@@ -7,18 +7,49 @@ from django.utils.translation import gettext_lazy as _
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-#*consolidado_vendedor, nome sugerido por Tiago para nova tabela utilizando os dados de contratos e contrato_parcelas
 #TODO:  selecionar o que vendedo e totalizar quanto ele tem para recebe entre agosto/22
-#! Colocar uma feature em que é possivel filtrar por data de vencimento
-#Todo: Todas as parcelas de uma determinada data, e some o valor de cada e organize por vendedor
-#TODO:
 from . import existing_models
+#*pegar o id e nome do vendedor e colocar no cad cliente
+class CAD_Cliente_Model(models.Model):
+    #!Talvez remover os campos nome e codigo caso encontre a referencia deles
+    vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
+    nome = models.CharField(_(""), max_length=128, blank=True, null=True)
+    codigo = models.IntegerField(_(""), blank=True, null=True)
+    
+    #* Todos os campos abaixo estão corretas
+    taxas = models.DecimalField(_("Taxas"), max_digits=5, decimal_places=2, blank=True, null=True)
+    sim = models.IntegerField(_(""), default=3/100, blank=True, null=True)
+    nao = models.IntegerField(_(""), default=20/100, blank=True, null=True)
+    operacional = models.IntegerField(_(""), default=5/100, blank=True, null=True)
+    tcc = models.DecimalField(_(""), max_digits=5, decimal_places=2, default=1/100, blank=True, null=True)
+    honorarios = models.DecimalField(_(""), max_digits=5, decimal_places=2, default=3/100, blank=True, null=True)
+    animal = models.CharField(_(""), max_length=256, blank=True, null=True)
+    evento = models.CharField(_(""), max_length=256, blank=True, null=True)
+    informar_repasse = models.CharField(_(""), max_length=50, blank=True, null=True)
+    vl_juros = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
+    vl_boletos = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
+    vl_pago = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
+    deposito = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
+    repasse = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
+
+    
+
+    class Meta:
+        verbose_name = _("cad_cliente_model")
+        verbose_name_plural = _("cad_cliente_models")
+
+    def __str__(self):
+        return self.nome
+
+    def get_absolute_url(self):
+        return reverse("cad_cliente_model_detail", kwargs={"pk": self.pk})
+
 
 
 class CAD_Cliente(models.Model):
-    taxas = models.DecimalField(_("Taxas"), max_digits=5, decimal_places=2)
-    id_vendedor = models.CharField(_(""), max_length=50)
     vendedor = models.CharField(_(""), max_length=128)
+    codigo = models.IntegerField(_(""))
+    taxas = models.DecimalField(_("Taxas"), max_digits=5, decimal_places=2)
     sim = models.IntegerField(_(""), default=3/100)
     nao = models.IntegerField(_(""), default=20/100)
     operacional = models.IntegerField(_(""), default=5/100)
@@ -32,16 +63,12 @@ class CAD_Cliente(models.Model):
     vl_pago = models.DecimalField(_(""), max_digits=5, decimal_places=2)
     deposito = models.DecimalField(_(""), max_digits=5, decimal_places=2)
     repasse = models.DecimalField(_(""), max_digits=5, decimal_places=2)
-    #eventos
-    
-    """ @property
-    def calculo(self):
-        return self. """
+
     
 
     class Meta:
-        verbose_name = _("ParametrosCliente_Repasse")
-        verbose_name_plural = _("ParametrosCliente_Repasses")
+        verbose_name = _("CAD_Cliente")
+        verbose_name_plural = _("CAD_Clientes")
 
     def __str__(self):
         return self.vendedor

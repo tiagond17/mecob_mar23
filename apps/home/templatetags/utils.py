@@ -1,5 +1,5 @@
 from django.template import Library
-from apps.home.existing_models import Contratos, ContratoParcelas
+from apps.home.existing_models import Contratos, ContratoParcelas, Pessoas
 
 register = Library()
 
@@ -29,4 +29,25 @@ def datas_validas(parcelas):
         if parcela.dt_credito:
             datas.append(parcela)
     return datas
-    
+
+#faça um metodo async para pegar o nome da pessoa
+async def pegar_pessoa_pelo_id(pessoa_id):
+    pessoa = await Pessoas.objects.get(id=pessoa_id)
+    return pessoa.nome
+
+@register.filter(name='pegar_pessoa_pelo_id')
+def pegar_pessoa_pelo_id(pessoa_id):
+    return Pessoas.objects.get(id=pessoa_id).nome
+
+@register.filter(name='pegar_pessoa_pelo_nome')
+def pegar_pessoa_pelo_nome(nome):
+    pessoas = Pessoas.objects.filter(nome=nome, eh_vendedor="S")
+    return [pessoa.id for pessoa in pessoas]
+    """ try:
+        pessoa =  Pessoas.objects.get(nome=nome, eh_vendedor="S")
+        return pessoa.id
+    except Pessoas.DoesNotExist:
+        return 'id não encontrado'
+    except Pessoas.MultipleObjectsReturned:
+        pessoas = Pessoas.objects.filter(nome=nome, eh_vendedor="S")
+        return [pessoa.id for pessoa in pessoas] """

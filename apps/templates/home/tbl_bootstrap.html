@@ -134,7 +134,7 @@
                 <div class="card">
                   <div class="card-header">
                     <h5>Hover Table</h5>
-                    <form action="{% url 'home:consulta_por_data' %}" method="post">
+                    <form action="" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
                         <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
@@ -152,32 +152,50 @@
                       <table class="table table-hover" id="table-contratos">
                         <thead>
                           <tr>
-                            <th>#</th>
+                            {% comment %} <th>#</th>
                             <th>Vendedor id</th>
                             <th>Vendedor</th>
                             <th>Comprador</th>
+                            <th>Parcela Paga</th>
                             <th>Valor da Parcela</th>
                             <th>Valor total</th>
+                            <th>Vencimento</th>
+                            <th>Credito</th>
+                            <td>Banco</td>
                             <th>Descricao</th>
                             <td>Total das Parcelas do vendedor</td>
                             <td>Evento</td>
-                            <td>Calculo</td>
+                            <td>Calculo</td> {% endcomment %}
+                            <th>Vendedor ID</th>
+                            <th>Nome Vendedor</th>
+                            <th>Contrato ID</th>
+                            <th>comprador ID</th>
+                            <th>Tipo Contrato</th>
+                            <th>Status</th>
+                            <th>valor boleto</th>
+                            <th>valor pago</th>
+                            <th>valor parcela</th>
+                            <th>n° da parcela</th>
+                            <th>data credito parcelas</th>
+                            <th>data credito arqs retorno</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for contrato in contratos %}
-                          <tr>
-                            <th>{{forloop.counter}}</th>
-                            <th>{{contrato.vendedor.pk}}</th>
-                            <td>{{contrato.vendedor}}</td>
-                            <td>{{contrato.comprador}}</td>
-                            <th>R${{contrato.parcelas.first.vl_parcela|intcomma}}</th>
-                            <td>R${{contrato.parcelas.all|sum_valor_parcelas|intcomma}}</td>
-                            <td>{{contrato.descricao}}</td>
-                            <td>R${{contratos|sum_total_valor_parcelas:contrato.vendedor.id|intcomma}}</td>
-                            <td>{{contrato.eventos}}</td>
-                            <td>0</td>
-                          </tr>
+                          {% for querie in sql %}
+                            <tr>
+                              <th>{{querie.0}}</th>
+                              <th>{{querie.0|pegar_pessoa_pelo_id}}</th>
+                              <td>{{querie.1}}</td>
+                              <td>{{querie.2}}</td>
+                              <td>{{querie.3}}</td>
+                              <td>{{querie.4}}</td>
+                              <td>{{querie.5}}</td>
+                              <td>{{querie.6}}</td>
+                              <td>{{querie.7}}</td>
+                              <td>{{querie.8}}</td>
+                              <td>{{querie.9}}</td>
+                              <td>{{querie.10}}</td>
+                            </tr>
                           {% endfor %}
                         </tbody>
                       </table>
@@ -218,7 +236,6 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% if parcelas %}
                             {% for parcela in parcelas %}
                               <tr>
                                 <th>{{parcela.nu_parcela}}</th>
@@ -227,11 +244,9 @@
                                 <td>valor boleto</td>
                                 <td>valor de pagamento</td>
                                 <td>{{parcela.contratos.arquivos_contratos.first.dados_arquivo_retorno.first.vl_pago}}</td>
-
                               </tr>
                             {% endfor %}
-                          {% else %}
-                          {% for contrato in contratos %}
+                          {% comment %} {% for contrato in contratos %}
                             {% for parcela in contrato.parcelas.all|datas_validas %}
                             <tr>
                               <th>{{parcela.nu_parcela}}</th>
@@ -241,8 +256,7 @@
                               <td>valor de pagamento</td>
                             </tr>  
                             {% endfor %}
-                          {% endfor %}
-                          {% endif %}
+                          {% endfor %} {% endcomment %}
                         </tbody>
                       </table>
                     </div>

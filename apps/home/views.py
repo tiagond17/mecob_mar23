@@ -9,11 +9,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
-from django.db import connection
-
+from django.db import connection, connections
 
 from .existing_models import Contratos, ContratoParcelas
 from .forms import CAD_ClienteForm
+from .models import CAD_Cliente, CAD_Cliente_Model
 
 
 @login_required(login_url="/login/")
@@ -23,38 +23,46 @@ def index(request):
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
 
+def preencher_tabela(data_inicio, data_fim):
+    if not data_inicio and not data_fim:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM contrato_parcelas, contratos, dados_arquivo_retorno limit 10")
+            result = cursor.fetchall()
+            return result
+        
 
 @login_required(login_url="/login/")
 def pages(request):
     context = {}
-    with connection.cursor() as cursor:
-        #fazer isso aqui: select * from contrato_parcelas, contratos, dados_arquivo_retorno
-        dados = cursor.execute('SELECT * FROM contrato_parcelas, contratos, dados_arquivo_retorno')
-        print(dados)
-        context = {'dados': dados}
         
-        
-    #context = {'contratos': Contratos.objects.all()[:30]}
-    #vendedores = Contratos.objects.vendedores.order_by('-id')
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
     try:
 
         load_template = request.path.split('/')[-1]
-        # print(f'{load_template = }\n {request.path = } \n {request.path.split("/")[-1] = }')
-
-        #!Somnete o admin pode fazer registro de novos usuarios
-
+        
         if load_template == 'admin':
             return HttpResponseRedirect(reverse('admin:index'))
         context['segment'] = load_template
 
         # se o template a ser carregado for tbl_bootstrap.html carregue contratos
         if load_template == 'tbl_bootstrap.html':
+            if request.method == 'POST':
+                # pegue as datas do form
+                data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
+                data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                print(data_inicio, data_fim)
+                
+                with connection.cursor() as cursor:
+                    cursor.execute("select vendedor_id, contratos.id, comprador_id, tp_contrato, status ,vl_boleto, vl_pago, vl_parcela, nu_parcelas, dados_arquivo_retorno.dt_credito, contrato_parcelas.dt_credito from dados_arquivo_retorno, contratos, contrato_parcelas where contrato_parcelas.dt_credito >= '{}' and contrato_parcelas.dt_credito <= '{}' limit 1000".format(data_inicio, data_fim))
+                    result = cursor.fetchall()
+                    context['sql'] = result
             context['contratos'] = Contratos.objects.all()[:30]
 
         if load_template == 'form_elements.html':
             context['form'] = CAD_ClienteForm()
+            context['cad_clientes'] = CAD_Cliente_Model.objects.all()
+            
 
         html_template = loader.get_template('home/' + load_template)
         return HttpResponse(html_template.render(context, request))
@@ -64,9 +72,9 @@ def pages(request):
         html_template = loader.get_template('home/page-404.html')
         return HttpResponse(html_template.render(context, request))
 
-    except:
+    """ except:
         html_template = loader.get_template('home/page-500.html')
-        return HttpResponse(html_template.render(context, request))
+        return HttpResponse(html_template.render(context, request)) """
 
 # no mes de setembro quero ver os vendedores em aberto, os contratos
 # filtro pela data de vencimento dia 1 do 8 ate 21 do 8
@@ -98,7 +106,12 @@ def consulta_por_data(request):
 def criar_cad_cliente(request):
     #!repasse = valor - taxa - me
     #!calc = valor - taxa
+    context = {}
     """ Aplicar os calculos da planilha aqui """
     if request.method == "post":
         return HttpResponse('<h1>POST</h1>')
-    return HttpResponse('<h1>GET</h1>')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT tp_contrato, status ,vl_boleto, vl_pago, vl_parcela, nu_parcelas, dados_arquivo_retorno.dt_credito, contrato_parcelas.dt_credito FROM dados_arquivo_retorno, contratos, contrato_parcelas LIMIT 10")
+        result = cursor.fetchall()
+        context['sql'] = result
+    return HttpResponse('<h1>GET, {}</h1>'.format(context['sql']))
