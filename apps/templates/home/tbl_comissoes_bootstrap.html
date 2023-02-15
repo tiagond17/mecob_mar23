@@ -1,0 +1,119 @@
+{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %}
+
+{% load utils %}
+{% load humanize %}
+
+{% load static %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<!-- [ Main Content ] start -->
+<section class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Bootstrap Basic Tables</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item"><a href="#!">Tables</a></li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Basic Tables</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <h1>Comissoes</h1>
+              <!-- [ Hover-table ] start -->
+              <div class="col-xl-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Hover Table</h5>
+                    <form action="" method="post">
+                      {% csrf_token %}
+                      <p>filtrar de 
+                        <input type="date" name="data-inicio" id="data-inicio">
+                         até 
+                        <input type="date" name="data-fim" id="data-fim"> 
+                        <button class="btn btn-primary">Filtrar</button> 
+                        <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                      </p>
+                    </form>
+                    <span class="d-block m-t-5"
+                      >use class <code>table-hover</code> inside table element</span>
+                  </div>
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-comissoes">
+                        <thead>
+                          <tr>
+                            <th>Vendedor ID</th>
+                            <th>Vendedor_Comissao</th>
+                            <th>Contrato ID</th>
+                            <th>comprador ID</th>
+                            <th>Comissao</th>
+                            <th>N° Parcela</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for calculo_repasse in calculos_repasses %}
+                            <tr>
+                              <th>{{calculo_repasse.id_contrato.vendedor.id}}</th>
+                              <td>{{calculo_repasse.get_repasses}}</td>
+                              <th>{{calculo_repasse.id_contrato.id}}</th>
+                              <td>{{calculo_repasse.id_contrato.comprador.id}}</td>
+                              <td>{{calculo_repasse.id_contrato.vendedor}}</td>{% comment %} |calcular_comissao:calculo_repasse.get_repasses|intcomma {% endcomment %}
+                              <td>N° Parcela</td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <form action="" method="POST" class="form w-25">
+                      {% csrf_token %}
+                      <label for="taxa">Taxa</label>
+                      <input type="text" id="taxa" name="taxa" class="form-control">
+      
+                      <label for="vendedor">Vendedor</label>
+                      <input type="text" id="vendedor" name="vendedor" class="form-control">
+                    </form>
+                  </div>
+                  </div>
+                </div>
+              </div>
+              <!-- [ Hover-table ] end -->
+            <!-- [ Main Content ] end -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-comissoes').DataTable();
+  })
+</script>
+{% endblock javascripts %}

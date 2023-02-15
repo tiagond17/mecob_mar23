@@ -12,8 +12,8 @@ from django.shortcuts import render
 from django.db import connection, connections
 
 from .existing_models import Contratos, ContratoParcelas
-from .forms import CAD_ClienteForm
-from .models import CAD_Cliente, CAD_Cliente_Model
+from .forms import CAD_ClienteForm, Calculo_RepasseForm
+from .models import CAD_Cliente_Model, Calculo_Repasse
 
 
 @login_required(login_url="/login/")
@@ -44,6 +44,9 @@ def pages(request):
         if load_template == 'admin':
             return HttpResponseRedirect(reverse('admin:index'))
         context['segment'] = load_template
+        
+        if load_template == 'tbl_comissoes_bootstrap.html':
+            context['calculos_repasses'] = Calculo_Repasse.objects.all()[:100]
 
         # se o template a ser carregado for tbl_bootstrap.html carregue contratos
         if load_template == 'tbl_bootstrap.html':
@@ -58,10 +61,69 @@ def pages(request):
                     result = cursor.fetchall()
                     context['sql'] = result
             context['contratos'] = Contratos.objects.all()[:30]
+            
+        if load_template == 'cad_clientes_table_bootstrap.html':
+            context['cad_clientes'] = CAD_Cliente_Model.objects.all()[:1000]
+            
 
         if load_template == 'form_elements.html':
-            context['form'] = CAD_ClienteForm()
-            context['cad_clientes'] = CAD_Cliente_Model.objects.all()
+            with connection.cursor() as cursor:
+                cursor.execute("""
+SELECT cp.contratos_id AS id_contrato,
+       CASE
+           WHEN NOT isnull(pev.nome) THEN pev.nome
+           ELSE 'boleto avulso'
+       END AS vendedor,
+       CASE
+           WHEN NOT isnull(pec.nome) THEN pec.nome
+           ELSE peb.nome
+       END AS comprador,
+       cp.nu_parcela AS nu_parcela,
+       cp.vl_parcela AS vl_parcela,
+       cp.vl_pagto,
+       cp.dt_vencimento AS dt_vencimento,
+       cp.dt_credito AS dt_credito,
+       cp.dt_processo_pagto AS dt_processamento,
+       CASE
+           WHEN cp.contratos_id > 12460
+                OR isnull(cp.contratos_id) THEN 'UNICRED'
+           ELSE 'BRADESCO'
+       END AS banco,
+       co.nu_parcelas AS tt_parcelas,
+
+  (SELECT count(*)
+   FROM contrato_parcelas cpx
+   WHERE cpx.contratos_id = cp.contratos_id
+     AND (NOT isnull(dt_pagto)
+          AND NOT dt_pagto = '0000-00-00') ) AS tt_quitadas,
+       co.parcela_primeiro_pagto AS parcela_primeiro_pagto,
+       ev.nome AS evento,
+       co.descricao AS produto
+FROM contrato_parcelas cp
+LEFT JOIN contratos co ON co.id = cp.contratos_id
+LEFT JOIN boletos_avulso bo ON bo.id = cp.boletos_avulso_id
+LEFT JOIN pessoas pec ON pec.id = co.comprador_id
+LEFT JOIN pessoas pev ON pev.id = co.vendedor_id
+LEFT JOIN pessoas peb ON peb.id = bo.pessoas_id
+LEFT JOIN eventos ev ON ev.id = co.eventos_id
+WHERE date(dt_credito) = '2022-09-30'
+  AND NOT isnull(arquivos_id_retorno)
+ORDER BY banco DESC,
+         cp.contratos_id ASC""")
+                #dt_processo_pagto
+                #dt_credito
+                #TODO: tornar essa consulta mais pratica por meio de uma função
+                result = cursor.fetchall()
+                context['sql'] = result
+            if request.method == "POST":
+                form = Calculo_RepasseForm(request.POST)
+                if form.is_valid():
+                    form.save()
+                    print("tudo certo")
+                else:
+                    print(form.errors)
+            context['form'] = Calculo_RepasseForm()
+            #!context['cad_clientes'] = CAD_Cliente_Model.objects.all()
             
 
         html_template = loader.get_template('home/' + load_template)

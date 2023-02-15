@@ -32,81 +32,108 @@
                     <a href="javascript:">Form Elements</a>
                   </li>
                 </ul>
-                <div class="col-xl-12">
-                  <div class="card">
-                    <div class="card-header">
-                      <h5>Hover Table</h5>
-                      <form action="" method="post">
-                        {% csrf_token %}
-                        <p>filtrar de 
-                          <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
-                           até 
-                          <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
-                          <button class="btn btn-primary">Filtrar</button> 
-                          <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
-                        </p>
-                      </form>
-                      <span class="d-block m-t-5"
-                        >use class <code>table-hover</code> inside table element</span>
-                    </div>
-                    <div class="card-block table-border-style">
-                      <div class="table-responsive">
-                        <table id="table-cad-cliente" class="table table-hover">
-                          <thead>
-                            <tr>
-                              <th>ID Vendedor (MODEL)</th>
-                              <th>Nome</th>
-                              <th>Código</th>
-                              <th>SIm</th>
-                              <th>Não</th>
-                              <th>Operacional</th>
-                              <th>TCC</th>
-                              <th>Honorarios</th>
-                              <th>Animal</th>
-                              <th>Evento</th>
-                              <th>Informar Repasses</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for cad_cliente in cad_clientes %}
-                              <tr>
-                                <th>{{cad_cliente.nome}}</th>
-                                <th>{{cad_cliente.nome}}</th>
-                                <td>{{cad_cliente.codigo}}</td>
-                                <td>{{cad_cliente.sim}}</td>
-                                <td>{{cad_cliente.nao}}</td>
-                                <td>{{cad_cliente.operacional}}</td>
-                                <td>{{cad_cliente.tcc}}</td>
-                                <td>{{cad_cliente.honorarios}}</td>
-                                <td>{{cad_cliente.animal}}</td>
-                                <td>{{cad_cliente.evento}}</td>
-                                <td>{{cad_cliente.informar_repasse}}</td>
-                              </tr>
-                            {% endfor %}
-                            {% comment %} 
-                            <tr>
-                              <th>1</th>
-                              <td>Roger Luiz de Oliveira Costa</td>
-                              <td>689</td>
-                              <td>3,00%</td>
-                              <td>20%</td>
-                              <td>5%</td>
-                              <td>1%</td>
-                              <td>3%</td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                            </tr> {% endcomment %}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>COB</h5>
+              {% comment %} <form action="" method="post">
+                {% csrf_token %}
+                <p>filtrar de 
+                  <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
+                   até 
+                  <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
+                  <button class="btn btn-primary">Filtrar</button> 
+                  <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                </p>
+              </form> {% endcomment %}
+              <span class="d-block m-t-5"
+                >use class <code>table-hover</code> inside table element</span>
+            </div>
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table id="table-cob" class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Contrato ID</th>
+                      <th>Vendedor</th>
+                      <th>Comprador</th>
+                      <th>N° Parcela</th>
+                      <th>Valor Parcela</th>
+                      <th>Valor Pago</th>
+                      <th>Data Vencimento</th>
+                      <th>Data Credito</th>
+                      <th>Data Processamento</th>
+                      <th>Banco</th>
+                      <th>Total Parcelas</th>
+                      <th>Total Quitadas</th>
+                      <th>Parcela 1° pagto.</th>
+                      <th>Evento</th>
+                      <th>Produto</th>
+                      <th>Deposito</th>
+                      <th>Calculo</th>
+                      <th>Taxas</th>
+                      <th>ADI</th>
+                      <th>ME</th>
+                      <th>OP</th>
+                      <th>Repasses</th>
+                      <th>Comissao</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for querie in sql %}
+                    <tr>
+                      <th>{{querie.0}}</th>
+                      <th>{{querie.1}}</th>
+                      <td>{{querie.2}}</td>
+                      <td>{{querie.3}}</td>
+                      <td>{{querie.4}}</td>
+                      <td>{{querie.5}}</td>
+                      <td>{{querie.6}}</td>
+                      <td>{{querie.7}}</td>
+                      <td>{{querie.8}}</td>
+                      <td>{{querie.9}}</td>
+                      <td>{{querie.10}}</td>
+                      <td>{{querie.11}}</td>
+                      <td>{{querie.12}}</td>
+                      <td>{{querie.13}}</td>
+                      <td>{{querie.14}}</td>
+                      <th>Deposito</th>
+                      <th>Calculo</th>
+                      <th>Taxas</th>
+                      <th>ADI</th>
+                      <th>ME</th>
+                      <th>OP</th>
+                      <td>{{querie.0|pegar_repasse_pelo_id_contrato}}</td>
+                      <th>Comissao</th>
+                    </tr>
+                    {% endfor %}
+                    {% comment %} 
+                    <tr>
+                      <th>1</th>
+                      <td>Roger Luiz de Oliveira Costa</td>
+                      <td>689</td>
+                      <td>3,00%</td>
+                      <td>20%</td>
+                      <td>5%</td>
+                      <td>1%</td>
+                      <td>3%</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr> {% endcomment %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
         <!-- [ breadcrumb ] end -->
         <div class="main-body">
           <div class="page-wrapper">
@@ -121,12 +148,28 @@
 								</div>
 								<div class="card-body">
                   <h5>Form controls</h5>
-                  <h1>CadCliente</h1>
+                  <h1>Novo Registro</h1>
                   
 									<hr />
 									<div class="row">
                     <div class="col-md-6">
-                      <form method="post" action="{% url 'home:criar_cad_cliente' %}" name="create-cad-cliente" class="form">
+                      <form action="" method="post">
+                        {% csrf_token %}
+                        <label for="{{form.deposito.id_for_label}}">{{form.deposito.name}}</label>
+                        {% render_field form.deposito class+="form-control my-1" placeholder="deposito" %}
+                        
+                        {% render_field form.vl_pago class+="form-control my-1" placeholder="vl_pago" %}
+                        {% render_field form.taxas class+="form-control my-1" placeholder="taxas" %}
+                        {% render_field form.adi class+="form-control my-1" placeholder="adi" %}
+                        {% render_field form.me class+="form-control my-1" placeholder="me" %}
+                        {% render_field form.op class+="form-control my-1" placeholder="op" %}
+                        {% comment %} {% for field in form %}
+                          <label for="{{field.id}}">{{field.name}}</label>
+                          <p>{{field}}</p>
+                        {% endfor %} {% endcomment %}
+                        <button type="submit" name="" id="" class="btn btn-primary btn-lg btn-block">Submit</button>
+                      </form>
+                      {% comment %} <form method="post" action="{% url 'home:criar_cad_cliente' %}" name="create-cad-cliente" class="form">
                         {% csrf_token %}
                         <label for="taxas">Taxas</label>
                         <input type="text" 
@@ -189,7 +232,7 @@
                           name="evento" 
                           id="evento">
 
-                          <label for="informar-repasse">Informar Repaase</label>
+                          <label for="informar-repasse">Informar Repasse</label>
                           <input type="text" 
                           class="form-control" 
                           name="informar-repasse" 
@@ -228,12 +271,17 @@
                           id="repasse">
 
 												<button type="submit" class="btn btn-primary my-4 w-100">Novo Cad</button>
-											</form>
+											</form> {% endcomment %}
 
 											
 										</div>
 										<div class="col-md-6">
-											<H1>OUTRA AREA PARA DIGITAR</H1>
+											<ul>
+                        <li>garantir que os calculos estejam batendo com as planilhas</li>
+                        <li>Garantir que os dados estão tanto no bd quanto na planilha</li>
+                        <li>Garantir que não tenha duplicidade nos nomes e contratos</li>
+                        <li>Garantir que não haja erro de calculo ao criar novos Modelos</li>
+                      </ul>
 										</div>
 									</div>
 									<h5 class="mt-5">Sizing</h5>
@@ -836,6 +884,7 @@
 <script>
   $(document).ready(function(){
     $('#table-cad-cliente').DataTable();
+    $('#table-cob').DataTable();
   })
 </script>
 {% endblock javascripts %}

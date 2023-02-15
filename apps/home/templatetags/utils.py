@@ -1,5 +1,6 @@
 from django.template import Library
 from apps.home.existing_models import Contratos, ContratoParcelas, Pessoas
+from apps.home.models import Calculo_Repasse
 
 register = Library()
 
@@ -51,3 +52,29 @@ def pegar_pessoa_pelo_nome(nome):
     except Pessoas.MultipleObjectsReturned:
         pessoas = Pessoas.objects.filter(nome=nome, eh_vendedor="S")
         return [pessoa.id for pessoa in pessoas] """
+        
+@register.filter(name='pegar_repasse_pelo_id_contrato')
+def pegar_repasse_pelo_id_contrato(id_contrato):
+    try:
+        calculos = Calculo_Repasse.objects.filter(id_contrato=id_contrato)
+        return calculos
+        """ if calculos.count() > 1:
+            return calculos[0]
+        else:
+            return [calculo.repasses for calculo in calculos] """
+    except Calculo_Repasse.DoesNotExist:
+        return 'id não encontrado'
+    
+@register.filter('calcular_comissao')
+def calcular_comissao(vendedor, repasse):
+    #repasse is a str
+    if vendedor.nome:
+        #coloque apenas 2 casas decimais apos a virgula
+        return float(repasse) * 0.05
+        
+    return float(repasse) * 0.1
+    """ if vendedor.nome:
+        return repasse * 0.05
+    return repasse * 0.1 """
+
+        
