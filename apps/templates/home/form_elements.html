@@ -54,7 +54,15 @@
               <span class="d-block m-t-5"
                 >use class <code>table-hover</code> inside table element</span>
             </div>
+            
             <div class="card-block table-border-style">
+              <form method="post">
+                {% csrf_token %}
+                data inicio <input type="date" id="data_inicio" name="data_inicio" required>
+                data fim <input type="date" id="data_fim" name="data_fim" required>
+                <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
+              </form>
               <div class="table-responsive">
                 <table id="table-cob" class="table table-hover">
                   <thead>
@@ -71,7 +79,7 @@
                       <th>Banco</th>
                       <th>Total Parcelas</th>
                       <th>Total Quitadas</th>
-                      <th>Parcela 1° pagto.</th>
+                      <th>Parcela paga</th>
                       <th>Evento</th>
                       <th>Produto</th>
                       <th>Deposito</th>
@@ -102,14 +110,14 @@
                       <td>{{querie.12}}</td>
                       <td>{{querie.13}}</td>
                       <td>{{querie.14}}</td>
-                      <th>Deposito</th>
-                      <th>Calculo</th>
-                      <th>Taxas</th>
-                      <th>ADI</th>
-                      <th>ME</th>
-                      <th>OP</th>
-                      <td>{{querie.0|pegar_repasse_pelo_id_contrato}}</td>
-                      <th>Comissao</th>
+                      <td>{{querie.15}}</td>
+                      <td>{{querie.16}}</td>
+                      <td>{{querie.17}}</td>
+                      <td>{{querie.18}}</td>
+                      <td>{{querie.19}}</td>
+                      <td>{{querie.20}}</td>
+                      <td>{{querie.21}}</td>
+                      <td>{{querie.22}}</td>
                     </tr>
                     {% endfor %}
                     {% comment %} 

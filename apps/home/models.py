@@ -100,6 +100,7 @@ class CAD_Cliente(models.Model):
 #?Soma tudo e depois coloca o calculo de 1% do faturamento ?
 
 class Calculo_Repasse(models.Model):
+    #id: default django
     #TODO: o id_contrato e o id_vendedor são instancias de Contratos e Pessoas, alterar o nome para vendedor e contrato
     id_vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
     id_contrato = models.ForeignKey('Contratos', on_delete=models.CASCADE, blank=True, null=True)
@@ -112,34 +113,34 @@ class Calculo_Repasse(models.Model):
     calculo = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     nu_parcela = models.IntegerField(_(""), blank=True, null=True)
     comissao = models.CharField(_(""), max_length=128, blank=True, null=True)
+    dt_credito = models.DateField(_(""),blank=True, null=True)
     
     #* o vl_pago pode ser encontrado no modelo DadosArquivoRetorno
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     
+    repasse_calc = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    
     
     @property
     def calculo_model(self):
-        return self.vl_pago - (self.taxas or 0)
+        return (self.vl_pago or 0) - (self.taxas or 0)
     
     @property
     def me_model(self):
         #arredondar para cima sempre
         if (self.adi in ['Sim', 'sim', 'SIM','S', 's']):
             #return self.calculo_model * 0.2
-            return math.ceil(self.calculo_model * 0.2)
-        return math.ceil(self.calculo_model * 0.03)
+            return math.ceil(float(self.calculo_model) * 0.2)
+        return math.ceil(float(self.calculo_model) * 0.03)
         #return self.calculo_model * 0.03
     
     @property
     def repasses_model(self):
-        return self.vl_pago - (self.taxas or 0) - self.me_model
+        return (self.vl_pago or 0) - (self.taxas or 0) - self.me_model
     
     @property
     def get_repasses(self):
-        try:
-            return f'model: {self.repasses_model}'
-        except Exception:
-            return f'{self.repasses}'
+        return f'model: {self.repasses_model}'
 
     class Meta:
         verbose_name = _("calculo_repasse")
@@ -152,3 +153,34 @@ class Calculo_Repasse(models.Model):
     def get_absolute_url(self):
         return reverse("calculo_repasse_detail", kwargs={"pk": self.pk})
     
+
+class Dado(models.Model):
+    id_vendedor = models.IntegerField(_(""), blank=True, null=True)
+    id_contrato = models.IntegerField(_(""), blank=True, null=True)
+    vendedor = models.CharField(_(""), max_length=100, blank=True, null=True)
+    comprador = models.CharField(_(""), max_length=100, blank=True, null=True)
+    nu_parcela = models.CharField(_(""), max_length=100, blank=True, null=True)
+    contrato = models.IntegerField(_(""), blank=True, null=True)
+    vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    dt_vencimento = models.DateField(_(""),blank=True, null=True)
+    dt_credito = models.DateField(_(""),blank=True, null=True)
+    banco = models.CharField(_(""), max_length=50, blank=True, null=True)
+    evento = models.CharField(_(""), max_length=512, blank=True, null=True)
+    deposito = models.CharField(_(""), max_length=50, blank=True, null=True)
+    calculo = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    taxas = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    adi = models.CharField(_(""), max_length=12, blank=True, null=True)
+    me = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    op = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    repasses = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    comissao = models.CharField(_(""), max_length=128, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("Dado")
+        verbose_name_plural = _("Dados")
+
+    def __str__(self):
+        return f'{self.id_contrato}, {self.vendedor}'
+
+    def get_absolute_url(self):
+        return reverse("Dado_detail", kwargs={"pk": self.pk})

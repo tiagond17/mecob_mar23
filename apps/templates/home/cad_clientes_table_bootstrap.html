@@ -77,34 +77,33 @@
                       <table id="table-cad-cliente" class="table table-hover">
                         <thead>
                           <tr>
-                            <th>ID Vendedor (MODEL)</th>
+                            <th>id(DJ)</th>
                             <th>Nome</th>
-                            <th>Código</th>
-                            <th>SIm</th>
-                            <th>Não</th>
+                            <th>Codigo</th>
+                            <th>Sim</th>
+                            <th>Nao</th>
                             <th>Operacional</th>
                             <th>TCC</th>
                             <th>Honorarios</th>
                             <th>Animal</th>
                             <th>Evento</th>
-                            <th>Informar Repasses</th>
+                            <th>Informar Repasse</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for cad_cliente in cad_clientes %}
-                            <tr>
-                              <th>{{cad_cliente.nome}}</th>
-                              <th>{% if cad_cliente.vendedor %} {{cad_cliente.vendedor.id}} {% else %} NONE {% endif %}</th>
-                              <td>{{cad_cliente.codigo}}</td>
-                              <td>{{cad_cliente.sim}}</td>
-                              <td>{{cad_cliente.nao}}</td>
-                              <td>{{cad_cliente.operacional}}</td>
-                              <td>{{cad_cliente.tcc}}</td>
-                              <td>{{cad_cliente.honorarios}}</td>
-                              <td>{{cad_cliente.animal}}</td>
-                              <td>{{cad_cliente.evento}}</td>
-                              <td>{{cad_cliente.informar_repasse}}</td>
-                            </tr>
+                          <tr>
+                            <th>{{ cad_cliente.id }}</th>
+                            <td>{{ cad_cliente.nome }}</td>
+                            <td>{{ cad_cliente.codigo }}</td>
+                            <td>{{ cad_cliente.sim }}</td>
+                            <td>{{ cad_cliente.nao }}</td>
+                            <td>{{ cad_cliente.operacional }}</td>
+                            <td>{{ cad_cliente.tcc }}</td>
+                            <td>{{ cad_cliente.honorarios }}</td>
+                            <td>{{ cad_cliente.animal }}</td>
+                            <td>{{ cad_cliente.evento }}</td>
+                            <td>{{ cad_cliente.informar_repasse }}</td>
                           {% endfor %}
                           {% comment %} 
                           <tr>
@@ -122,6 +121,45 @@
                           </tr> {% endcomment %}
                         </tbody>
                       </table>
+                    </div>
+
+                    <h3>Cadastrar novo Cliente</h3>
+                    <div class="more-content align-center justify-content-center text-center w-100 form-inline">
+                      <form action="" method="post" name="form-novo-cliente" id="form-novo-cliente">
+                        {% csrf_token %}
+                        <p class="text-c-red">Deixar mais automatico a pesquisa do novo cadastro de um cliente</p>
+                        <label for="cliente-id">Digite o ID do cliente</label>
+                        <input class="form-control w-100" type="number" id="cliente-id" name="cliente-id">
+
+                        <label for="codigo">codigo</label>
+                        <input type="number" class="form-control w-100" id="codigo" name="codigo">
+                        
+                        <label for="sim">sim</label>
+                        <input type="number" class="form-control w-100" id="sim" name="sim" value="0.03">
+                        
+                        <label for="nao">nao</label>
+                        <input type="number" class="form-control w-100" id="nao" name="nao" value="0.20">
+                        
+                        <label for="operacional">operacional</label>
+                        <input type="number" class="form-control w-100" id="operacional" name="operacional" value="0.05">
+                        
+                        <label for="tcc">tcc</label>
+                        <input type="number" class="form-control w-100" id="tcc" name="tcc" value="0.01">
+                        
+                        <label for="honorarios">honorarios</label>
+                        <input type="number" class="form-control w-100" id="honorarios" name="honorarios" value="0.03">
+                        
+                        <label for="animal">animal</label>
+                        <input type="text" class="form-control w-100" id="animal" name="animal">
+                        
+                        <label for="evento">evento</label>
+                        <input type="text" class="form-control w-100" id="evento" name="evento">
+                        
+                        <label for="informar-repasse">informar-repasse</label>
+                        <input type="text" class="form-control w-100" id="informar-repasse" name="informar-repasse">
+                        
+                        <button type="button" name="" id="" class="btn btn-primary">Cadastrar</button>
+                      </form>
                     </div>
                   </div>
                 </div>
