@@ -9,6 +9,10 @@ import math
 Copyright (c) 2019 - present AppSeed.us
 """
 #*pegar o id e nome do vendedor e colocar no cad cliente
+
+"""A tabela CAD_Cliente_Model é utilizada para cadastrar novos clientes no sistema
+ou seja, sempre que uma pessoa (que esteja no banco de dados cadastrado na tabela Pessoa)
+realizar uma venda ela é adicionada na tabela CAD_Cliente_Model"""
 class CAD_Cliente_Model(models.Model):
     vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
     nome = models.CharField(_(""), max_length=128, blank=True, null=True)
@@ -95,15 +99,15 @@ class CAD_Cliente(models.Model):
     def get_absolute_url(self):
         return reverse("ParametrosCliente_Repasse_detail", kwargs={"pk": self.pk})
 
-#*No final o que queremos é: Débora, comissão R$ 1797 entre 01/08 até dia 12/08
 #?Como eu devo fazer o calculo ? do contrato geral ou da parcela ?
 #?Soma tudo e depois coloca o calculo de 1% do faturamento ?
 
 class Calculo_Repasse(models.Model):
     #id: default django
     #TODO: o id_contrato e o id_vendedor são instancias de Contratos e Pessoas, alterar o nome para vendedor e contrato
-    id_vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
-    id_contrato = models.ForeignKey('Contratos', on_delete=models.CASCADE, blank=True, null=True)
+    id_vendedor = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    id_contrato = models.ForeignKey('Contratos', on_delete=models.DO_NOTHING, blank=True, null=True)
+    contrato_parcelas = models.ForeignKey('ContratoParcelas', on_delete=models.DO_NOTHING, blank=True, null=True)
     deposito = models.CharField(_(""), max_length=128, blank=True, null=True)
     taxas = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     adi = models.CharField(_(""), max_length=12, blank=True, null=True)
@@ -121,6 +125,7 @@ class Calculo_Repasse(models.Model):
     repasse_calc = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     
     
+    #TODO: colocar os testes feitos de feira-online aqui
     @property
     def calculo_model(self):
         return (self.vl_pago or 0) - (self.taxas or 0)
@@ -145,15 +150,20 @@ class Calculo_Repasse(models.Model):
     class Meta:
         verbose_name = _("calculo_repasse")
         verbose_name_plural = _("calculo_repasses")
+        #*o nome Calculo_Repasse deveria estar como: 'calculo_repasse'
         db_table = 'Calculo_Repasse'
 
     def __str__(self):
         return self.get_repasses
+    
+    """ def save(self) -> object:
+        return super().save(force_insert, force_update, using, update_fields) """
 
     def get_absolute_url(self):
         return reverse("calculo_repasse_detail", kwargs={"pk": self.pk})
     
-
+""" esse modelo serve para puxar todos os dados que estão na planilha
+e facilitar a consulta caso haja erro de dados no Calculo_Repasse"""
 class Dado(models.Model):
     id_vendedor = models.IntegerField(_(""), blank=True, null=True)
     id_contrato = models.IntegerField(_(""), blank=True, null=True)
@@ -184,3 +194,14 @@ class Dado(models.Model):
 
     def get_absolute_url(self):
         return reverse("Dado_detail", kwargs={"pk": self.pk})
+
+
+class Quinzenal(models.Model):
+    def __str__(self):
+        pass
+
+    class Meta:
+        db_table = 'quinzenal'
+        managed = True
+        verbose_name = 'Quinzenal'
+        verbose_name_plural = 'Quinzenais'

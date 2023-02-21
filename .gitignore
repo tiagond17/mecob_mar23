@@ -32,3 +32,4 @@ apps/static/assets/.temp
 .env__
 cavalos_09_2022_backup.xlsx
 cavalos_09_2022.xlsx
+*.xlsx

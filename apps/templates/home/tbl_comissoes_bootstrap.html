@@ -63,15 +63,17 @@
                       <table class="table table-hover" id="table-comissoes">
                         <thead>
                           <tr>
+                            <th>Total Comissão</th>
                             <th>Comissionistas</th>
-                            <th>QTD Comissoes</th>
+                            <th>Quantidade de comissoes</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for querie in sql %}
                             <tr>
-                              <th>{{querie.0}}</th>
+                              <th>R$:{{querie.0|intcomma}}</th>
                               <td>{{querie.1}}</td>
+                              <td>{{querie.2}}</td>
                             </tr>
                           {% endfor %}
                         </tbody>
