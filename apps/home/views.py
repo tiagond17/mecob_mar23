@@ -13,7 +13,7 @@ from django.db import connection, connections
 from django.db.models import Sum
 from django.db.models.functions import TruncDay, Coalesce
 
-from django.db.models import F,Count,FloatField, Q
+from django.db.models import F, Count, FloatField, Q
 
 
 from .existing_models import Contratos, ContratoParcelas
@@ -27,6 +27,7 @@ def index(request):
 
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
+
 
 def preencher_tabela(data_inicio, data_fim):
     with connection.cursor() as cursor:
@@ -50,7 +51,7 @@ SELECT
     ev.nome as evento,
     co.descricao as produto,
     cr.deposito,
-	cr.calculo,
+    cr.calculo,
     cr.taxas,
     cr.adi,
     cr.me,
@@ -70,30 +71,30 @@ AND NOT ISNULL(arquivos_id_retorno)
 ORDER BY cp.dt_credito ASC, cp.nu_parcela ASC limit 1000""")
         result = cursor.fetchall()
         return result
-        
+
 
 @login_required(login_url="/login/")
 def pages(request):
     context = {}
-        
+
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
     try:
 
         load_template = request.path.split('/')[-1]
-        
+
         if load_template == 'admin':
             return HttpResponseRedirect(reverse('admin:index'))
         context['segment'] = load_template
-        
+
         if load_template == 'tbl_comissoes_bootstrap.html':
             with connection.cursor() as cursor:
                 cursor.execute("""
-SELECT SUM(vl_pago) as total_repasses, comissao, COUNT(*) as qtde
-FROM calculo_repasse
-WHERE comissao IS NOT NULL AND comissao != " -" AND comissao != "-" AND comissao != "            -" AND comissao != " - "
-#AND dt_credito BETWEEN '2022-08-12' AND '2022-01-23'
-group by comissao""")
+                    SELECT SUM(vl_pago) as total_repasses, comissao, COUNT(*) as qtde
+                    FROM calculo_repasse
+                    WHERE comissao IS NOT NULL AND comissao != " -" AND comissao != "-" AND comissao != "            -" AND comissao != " - "
+                    #AND dt_credito BETWEEN '2022-08-12' AND '2022-01-23'
+                    group by comissao""")
                 result = cursor.fetchall()
                 context['sql'] = result
 
@@ -101,7 +102,7 @@ group by comissao""")
         if load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
                 pass
-                """ # pegue as datas do form
+                """
                 data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
                 data_fim = request.POST.get('data-fim')  # 2022-08-21:str
                 print(data_inicio, data_fim)
@@ -143,19 +144,18 @@ GROUP BY
                 """)
                 context['sql'] = cursor.fetchall()
             #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
-            
+
         if load_template == 'cad_clientes_table_bootstrap.html':
             context['cad_clientes'] = CAD_Cliente_Model.objects.all()
-            
 
         if load_template == 'form_elements.html':
             if request.method == "POST":
                 data_inicio = request.POST.get('data_inicio')  # 2022-08-01:str
                 data_fim = request.POST.get('data_fim')  # 2022-08-21:str
-                context['sql'] = preencher_tabela(data_inicio=data_inicio,data_fim=data_fim)
+                context['sql'] = preencher_tabela(
+                    data_inicio=data_inicio, data_fim=data_fim)
             context['form'] = Calculo_RepasseForm()
             #!context['cad_clientes'] = CAD_Cliente_Model.objects.all()
-            
 
         html_template = loader.get_template('home/' + load_template)
         return HttpResponse(html_template.render(context, request))
