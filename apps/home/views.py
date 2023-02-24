@@ -18,7 +18,7 @@ from django.db.models import F, Count, FloatField, Q
 
 from .existing_models import Contratos, ContratoParcelas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import CAD_Cliente_Model, Calculo_Repasse
+from .models import CadCliente, Calculo_Repasse
 
 
 @login_required(login_url="/login/")
@@ -29,7 +29,7 @@ def index(request):
     return HttpResponse(html_template.render(context, request))
 
 
-def preencher_tabela(data_inicio, data_fim):
+def preencher_tabela_cob(data_inicio, data_fim):
     with connection.cursor() as cursor:
         cursor.execute(f"""
 SELECT
@@ -99,7 +99,7 @@ def pages(request):
                 context['sql'] = result
 
         # se o template a ser carregado for tbl_bootstrap.html carregue contratos
-        if load_template == 'tbl_bootstrap.html':
+        elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
                 pass
                 """
@@ -113,49 +113,141 @@ def pages(request):
                     context['sql'] = result """
             with connection.cursor() as cursor:
                 cursor.execute("""
-SELECT
-    c.vendedor_id,
-    p.nome AS nome_vendedor,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
-    SUM(CASE WHEN DAY(cr.dt_credito) = 15 THEN cr.repasses ELSE 0 END) AS dia_15,
-    SUM(cr.repasses) AS total_repasses
-FROM
-    calculo_repasse AS cr
-    INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
-    INNER JOIN pessoas AS p ON c.vendedor_id = p.id
-WHERE
-    cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-15'
-GROUP BY
-    c.vendedor_id,
-    p.nome 
-                """)
+                SELECT
+                    c.vendedor_id,
+                    p.nome AS nome_vendedor,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
+                    SUM(CASE WHEN DAY(cr.dt_credito) = 15 THEN cr.repasses ELSE 0 END) AS dia_15,
+                    SUM(cr.repasses) AS total_repasses
+                FROM
+                    calculo_repasse AS cr
+                    INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
+                    INNER JOIN pessoas AS p ON c.vendedor_id = p.id
+                WHERE
+                    cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-15'
+                GROUP BY
+                    c.vendedor_id,
+                    p.nome 
+                                """)
                 context['sql'] = cursor.fetchall()
             #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
 
-        if load_template == 'cad_clientes_table_bootstrap.html':
-            context['cad_clientes'] = CAD_Cliente_Model.objects.all()
+        elif load_template == 'cad_clientes_table_bootstrap.html':
+            context['cad_clientes'] = CadCliente.objects.all()
+            
+        elif load_template == 'tbl_julia_bootstrap.html':
+            if request.method == 'POST':
+                pass
+            pass
 
-        if load_template == 'form_elements.html':
+        elif load_template == 'form_elements.html':
             if request.method == "POST":
                 data_inicio = request.POST.get('data_inicio')  # 2022-08-01:str
                 data_fim = request.POST.get('data_fim')  # 2022-08-21:str
-                context['sql'] = preencher_tabela(
+                context['sql'] = preencher_tabela_cob(
                     data_inicio=data_inicio, data_fim=data_fim)
             context['form'] = Calculo_RepasseForm()
-            #!context['cad_clientes'] = CAD_Cliente_Model.objects.all()
+            #!context['cad_clientes'] = CadCliente.objects.all()
+
+        elif load_template == 'tbl_credito_cessao.html':
+            if request.method == "POST":
+                pass
+                context['nothing'] = None
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                SELECT distinct vendedor_id, nome , nu_parcelas, dt_contrato FROM contratos
+                join pessoas
+                where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
+                and repasse = 'S' and pessoas.id=vendedor_id
+                order by contratos.id desc
+                    """
+                )
+                context['sql'] = cursor.fetchall()
+        elif load_template == 'tbl_mensal_bootstrap.html':
+            if request.method == 'POST':
+                pass
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                        SELECT
+                        c.vendedor_id, 
+                        p.nome AS nome_vendedor, 
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 15 THEN cr.repasses ELSE 0 END) AS dia_15,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 16 THEN cr.repasses ELSE 0 END) AS dia_16,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 17 THEN cr.repasses ELSE 0 END) AS dia_17,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 18 THEN cr.repasses ELSE 0 END) AS dia_18,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 19 THEN cr.repasses ELSE 0 END) AS dia_19,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 20 THEN cr.repasses ELSE 0 END) AS dia_20,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 21 THEN cr.repasses ELSE 0 END) AS dia_21,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 22 THEN cr.repasses ELSE 0 END) AS dia_22,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 23 THEN cr.repasses ELSE 0 END) AS dia_23,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 24 THEN cr.repasses ELSE 0 END) AS dia_24,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 25 THEN cr.repasses ELSE 0 END) AS dia_25,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 26 THEN cr.repasses ELSE 0 END) AS dia_26,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 27 THEN cr.repasses ELSE 0 END) AS dia_27,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 28 THEN cr.repasses ELSE 0 END) AS dia_28,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 29 THEN cr.repasses ELSE 0 END) AS dia_29,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 30 THEN cr.repasses ELSE 0 END) AS dia_30,
+                        SUM(CASE WHEN DAY(cr.dt_credito) = 31 THEN cr.repasses ELSE 0 END) AS dia_31,
+                        SUM(cr.repasses) AS total_mes
+                    FROM 
+                        Calculo_Repasse AS cr 
+                        INNER JOIN contratos AS c ON cr.id_contrato_id = c.id 
+                        INNER JOIN pessoas AS p ON c.vendedor_id = p.id
+                    WHERE 
+                        MONTH(cr.dt_credito) = 9 AND YEAR(cr.dt_credito) = 2022 -- exemplo para fevereiro de 2022
+                    GROUP BY 
+                        c.vendedor_id, p.nome
+                    """
+                )
+                context['sql'] = cursor.fetchall()
+                
+        elif load_template == 'tbl_debito_cessao.html':
+            if request.method == 'POST':
+                pass
+                context['nothing'] = None
+                
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT distinct vendedor_id, nome , nu_parcelas, dt_contrato FROM contratos
+                    join pessoas
+                    where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
+                    and repasse = 'S' and pessoas.id=vendedor_id
+                    order by contratos.id desc;
+                    """
+                )
+                context['sql'] = cursor.fetchall()
+                
+            
 
         html_template = loader.get_template('home/' + load_template)
         return HttpResponse(html_template.render(context, request))

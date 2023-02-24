@@ -10,10 +10,10 @@ Copyright (c) 2019 - present AppSeed.us
 """
 #*pegar o id e nome do vendedor e colocar no cad cliente
 
-"""A tabela CAD_Cliente_Model é utilizada para cadastrar novos clientes no sistema
+"""A tabela CadCliente é utilizada para cadastrar novos clientes no sistema
 ou seja, sempre que uma pessoa (que esteja no banco de dados cadastrado na tabela Pessoa)
-realizar uma venda ela é adicionada na tabela CAD_Cliente_Model"""
-class CAD_Cliente_Model(models.Model):
+realizar uma venda ela é adicionada na tabela CadCliente"""
+class CadCliente(models.Model):
     vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
     nome = models.CharField(_(""), max_length=128, blank=True, null=True)
     codigo = models.IntegerField(_(""), blank=True, null=True)
@@ -35,8 +35,9 @@ class CAD_Cliente_Model(models.Model):
 
 
     class Meta:
-        verbose_name = _("cad_cliente_model")
-        verbose_name_plural = _("cad_cliente_models")
+        verbose_name = _("cad_cliente")
+        verbose_name_plural = _("cad_clientes")
+        db_table = 'cad_cliente'
         managed = True
 
     def __str__(self):
@@ -68,7 +69,7 @@ class Comissao_Vendedor(models.Model):
     def get_absolute_url(self):
         return reverse("Comissao_Vendedores_detail", kwargs={"pk": self.pk})
 
-
+""" 
 class CAD_Cliente(models.Model):
     vendedor = models.CharField(_(""), max_length=128)
     codigo = models.IntegerField(_(""))
@@ -91,13 +92,12 @@ class CAD_Cliente(models.Model):
     class Meta:
         verbose_name = _("CAD_Cliente")
         verbose_name_plural = _("CAD_Clientes")
-        #!db_table = 'cad_cliente', mudar para esse nome e garantir que os dados não sejam perdidos
 
     def __str__(self):
         return self.vendedor
 
     def get_absolute_url(self):
-        return reverse("ParametrosCliente_Repasse_detail", kwargs={"pk": self.pk})
+        return reverse("ParametrosCliente_Repasse_detail", kwargs={"pk": self.pk}) """
 
 #?Como eu devo fazer o calculo ? do contrato geral ou da parcela ?
 #?Soma tudo e depois coloca o calculo de 1% do faturamento ?

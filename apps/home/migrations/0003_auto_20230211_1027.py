@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(to='home.ContratoParcelas'),
         ),
         migrations.CreateModel(
-            name='CAD_Cliente_Model',
+            name='CadCliente',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nome', models.CharField(blank=True, max_length=128, null=True, verbose_name='')),

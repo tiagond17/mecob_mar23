@@ -1,0 +1,195 @@
+{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %}
+
+{% load utils %}
+{% load humanize %}
+
+{% load static %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<!-- [ Main Content ] start -->
+<section class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Bootstrap Basic Tables</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item"><a href="#!">Tables</a></li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Basic Tables</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <h1>Tabela Mensal</h1>
+              <!-- [ Hover-table ] start -->
+              <div class="col-xl-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Hover Table</h5>
+                    <form action="" method="post">
+                      {% csrf_token %}
+                      <p>filtrar de 
+                        <input type="date" name="data-inicio" id="data-inicio">
+                         até 
+                        <input type="date" name="data-fim" id="data-fim"> 
+                        <button class="btn btn-primary">Filtrar</button> 
+                        <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                      </p>
+                    </form>
+                    <span class="d-block m-t-5"
+                      >use class <code>table-hover</code> inside table element</span>
+                  </div>
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-comissoes">
+                        <thead>
+                          <tr>
+                            <th>Id Vendedor</th>
+                            <th>Vendedor</th>
+                            <th>Dia 1</th>
+                            <th>dia 2</th>
+                            <th>dia 3</th>
+                            <th>dia 4</th>
+                            <th>dia 5</th>
+                            <th>dia 6</th>
+                            <th>dia 7</th>
+                            <th>dia 8</th>
+                            <th>dia 9</th>
+                            <th>dia 10</th>
+                            <th>dia 11</th>
+                            <th>dia 12</th>
+                            <th>dia 13</th>
+                            <th>dia 14</th>
+                            <th>dia 15</th>
+                            <th>dia 16</th>
+                            <th>dia 17</th>
+                            <th>dia 18</th>
+                            <th>dia 19</th>
+                            <th>dia 20</th>
+                            <th>dia 21</th>
+                            <th>dia 22</th>
+                            <th>dia 23</th>
+                            <th>dia 24</th>
+                            <th>dia 25</th>
+                            <th>dia 26</th>
+                            <th>dia 27</th>
+                            <th>dia 28</th>
+                            <th>dia 29</th>
+                            <th>dia 30</th>
+                            <th>dia 31</th>
+                            <th>Repasses Totais</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for querie in sql %}
+                            <tr>
+                              <th>{{querie.0}}</th>
+                              <th>{{querie.1}}</th>
+                              <td>{{querie.2}}</td>
+                              <td>{{querie.3}}</td>
+                              <td>{{querie.4}}</td>
+                              <td>{{querie.5}}</td>
+                              <td>{{querie.6}}</td>
+                              <td>{{querie.7}}</td>
+                              <td>{{querie.8}}</td>
+                              <td>{{querie.9}}</td>
+                              <td>{{querie.10}}</td>
+                              <td>{{querie.11}}</td>
+                              <td>{{querie.12}}</td>
+                              <td>{{querie.13}}</td>
+                              <td>{{querie.14}}</td>
+                              <td>{{querie.15}}</td>
+                              <td>{{querie.16}}</td>
+                              <td>{{querie.17}}</td>
+                              <td>{{querie.18}}</td>
+                              <td>{{querie.19}}</td>
+                              <td>{{querie.20}}</td>
+                              <td>{{querie.21}}</td>
+                              <td>{{querie.22}}</td>
+                              <td>{{querie.23}}</td>
+                              <td>{{querie.24}}</td>
+                              <td>{{querie.25}}</td>
+                              <td>{{querie.26}}</td>
+                              <td>{{querie.27}}</td>
+                              <td>{{querie.28}}</td>
+                              <td>{{querie.29}}</td>
+                              <td>{{querie.30}}</td>from django.db.models import Q, Sum
+                              from datetime import datetime
+                              
+                              mes = 9
+                              ano = 2022
+                              
+                              # Criar a query base com a tabela principal e os joins
+                              query = Calculo_Repasse.objects.filter(dt_credito__month=mes, dt_credito__year=ano)\
+                                  .select_related('id_contrato', 'id_contrato__vendedor')
+                              
+                              # Criar as expressões para cada dia do mês
+                              expressoes_dias = []
+                              for dia in range(1, 32):
+                                  expressoes_dias.append(Sum('repasses', filter=Q(dt_credito__day=dia)).\
+                                                         alias(f'dia_{dia}'))
+                              
+                              # Adicionar a expressão para o total do mês
+                              expressoes_dias.append(Sum('repasses').alias('total_mes'))
+                              
+                              # Adicionar todas as expressões à query e agrupar por vendedor
+                              query = query.annotate(*expressoes_dias).values('id_contrato__vendedor_id', 
+                                                                              'id_contrato__vendedor__nome')\
+                                                                          .annotate(dia_total=Sum('repasses'))\
+                                                                          .order_by('id_contrato__vendedor__nome')
+                              
+                              # Executar a query e imprimir os resultados
+                              resultados = query.all()
+                              for resultado in resultados:
+                                  print(resultado)
+                              <td>{{querie.31}}</td>
+                              <td>{{querie.32}}</td>
+                              <td>{{querie.33}}</td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  </div>
+                </div>
+              </div>
+              <!-- [ Hover-table ] end -->
+            <!-- [ Main Content ] end -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-comissoes').DataTable();
+  })
+</script>
+{% endblock javascripts %}

@@ -1,12 +1,12 @@
 from django import forms
 
-from .models import CAD_Cliente, Calculo_Repasse
+from .models import CadCliente, Calculo_Repasse
 
 
 class CAD_ClienteForm(forms.ModelForm):
 
     class Meta:
-        model = CAD_Cliente
+        model = CadCliente
         fields = '__all__'
 
 
