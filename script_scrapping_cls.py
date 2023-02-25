@@ -23,30 +23,6 @@ def carregar_modeL_calcular_repasse():
       except Exception as e:
          print(f'linha: {linha} - {e}')
 
-""" 
-class Dado(models.Model):
-    id_vendedor = models.IntegerField(_(""), blank=True, null=True)
-    id_contrato = models.IntegerField(_(""), blank=True, null=True)
-    vendedor = models.CharField(_(""), max_length=100, blank=True, null=True)
-    comprador = models.CharField(_(""), max_length=100, blank=True, null=True)
-    nu_parcela = models.CharField(_(""), max_length=50, blank=True, null=True)
-    contrato = models.CharField(_(""), max_length=50, blank=True, null=True)
-    vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    dt_vencimento = models.DateField(_(""),blank=True, null=True)
-    dt_credito = models.DateField(_(""),blank=True, null=True)
-    banco = models.CharField(_(""), max_length=50, blank=True, null=True)
-    contrato = models.CharField(_(""), max_length=50, blank=True, null=True)
-    evento = models.CharField(_(""), max_length=256, blank=True, null=True)
-    deposito = models.CharField(_(""), max_length=50, blank=True, null=True)
-    calculo = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    taxas = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    adi = models.CharField(_(""), max_length=12, blank=True, null=True)
-    me = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    op = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    repasses = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    comissao = models.CharField(_(""), max_length=128, blank=True, null=True)
-
-"""
 
 def carregar_model_dados():
    linha = 0
@@ -82,7 +58,7 @@ def carregar_model_dados():
       except Exception as e:
          print(e)
          continue
-      
+
 def criar_calculos_repasse_com_base_nos_dados():
    for dado in Dado.objects.all():
       try:

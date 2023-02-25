@@ -69,38 +69,8 @@ class Comissao_Vendedor(models.Model):
     def get_absolute_url(self):
         return reverse("Comissao_Vendedores_detail", kwargs={"pk": self.pk})
 
-""" 
-class CAD_Cliente(models.Model):
-    vendedor = models.CharField(_(""), max_length=128)
-    codigo = models.IntegerField(_(""))
-    taxas = models.DecimalField(_("Taxas"), max_digits=5, decimal_places=2)
-    sim = models.IntegerField(_(""), default=3/100)
-    nao = models.IntegerField(_(""), default=20/100)
-    operacional = models.IntegerField(_(""), default=5/100)
-    tcc = models.DecimalField(_(""), max_digits=5, decimal_places=2, default=1/100)
-    honorarios = models.DecimalField(_(""), max_digits=5, decimal_places=2, default=3/100)
-    animal = models.CharField(_(""), max_length=50)
-    evento = models.CharField(_(""), max_length=128)
-    informar_repasse = models.CharField(_(""), max_length=50)
-    vl_juros = models.DecimalField(_(""), max_digits=5, decimal_places=2)
-    vl_boletos = models.DecimalField(_(""), max_digits=5, decimal_places=2)
-    vl_pago = models.DecimalField(_(""), max_digits=5, decimal_places=2)
-    deposito = models.DecimalField(_(""), max_digits=5, decimal_places=2)
-    repasse = models.DecimalField(_(""), max_digits=5, decimal_places=2)
- 
-
-    class Meta:
-        verbose_name = _("CAD_Cliente")
-        verbose_name_plural = _("CAD_Clientes")
-
-    def __str__(self):
-        return self.vendedor
-
-    def get_absolute_url(self):
-        return reverse("ParametrosCliente_Repasse_detail", kwargs={"pk": self.pk}) """
-
-#?Como eu devo fazer o calculo ? do contrato geral ou da parcela ?
 #?Soma tudo e depois coloca o calculo de 1% do faturamento ?
+
 
 class Calculo_Repasse(models.Model):
     #id: default django
@@ -113,51 +83,59 @@ class Calculo_Repasse(models.Model):
     adi = models.CharField(_(""), max_length=12, blank=True, null=True)
     me = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     op = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    banco = models.CharField(_(""), max_length=50, blank=True, null=True)
+    #?repasses: veio da planilha
     repasses = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     calculo = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     nu_parcela = models.IntegerField(_(""), blank=True, null=True)
     comissao = models.CharField(_(""), max_length=128, blank=True, null=True)
     dt_credito = models.DateField(_(""),blank=True, null=True)
-    
-    #* o vl_pago pode ser encontrado no modelo DadosArquivoRetorno
+    #? o vl_pago pode ser encontrado no modelo DadosArquivoRetorno
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    #?repasse: assim que o modelo é criado e devidamente salvo ele é computado com base nas regras do calculo e salvado
+    repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     
-    repasse_calc = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     
+    """ @property
+    def calculo_model(self) -> decimal.Decimal:
+        return decimal.Decimal(
+            float(self.vl_pago or 0) - float(self.taxas or 0)
+        ).quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_HALF_UP)
     
-    #TODO: colocar os testes feitos de feira-online aqui
     @property
-    def calculo_model(self):
-        return (self.vl_pago or 0) - (self.taxas or 0)
-    
-    @property
-    def me_model(self):
+    def me_model(self) -> decimal.Decimal:
         #arredondar para cima sempre
         if (self.adi in ['Sim', 'sim', 'SIM','S', 's']):
             #return self.calculo_model * 0.2
-            return math.ceil(float(self.calculo_model) * 0.2)
-        return math.ceil(float(self.calculo_model) * 0.03)
-        #return self.calculo_model * 0.03
+            return decimal.Decimal(
+                float(self.calculo_model) * 0.03
+            ).quantize(decimal.Decimal('.1'), rounding=decimal.ROUND_HALF_UP)
+        return decimal.Decimal(
+            float(self.calculo_model) * 0.2
+        ).quantize(decimal.Decimal('.1'), rounding=decimal.ROUND_HALF_UP)
     
     @property
-    def repasses_model(self):
-        return (self.vl_pago or 0) - (self.taxas or 0) - self.me_model
+    def repasses_model(self) -> decimal.Decimal:
+        return decimal.Decimal(
+            float(self.vl_pago or 0) - float(self.taxas or 0) - float(self.me_model)
+        ).quantize(decimal.Decimal('.01'), rounding=decimal.ROUND_HALF_UP)
     
-    @property
-    def get_repasses(self):
-        return f'model: {self.repasses_model}'
-
+    #*metodo save
+    def save(self, force_insert, using) -> None:
+        self.repasse = self.repasses_model
+        self.me = self.me_model
+        self.calculo = self.calculo_model
+        return super().save(force_insert=force_insert, using=using) """
+    
     class Meta:
         verbose_name = _("calculo_repasse")
         verbose_name_plural = _("calculo_repasses")
         #*o nome Calculo_Repasse deveria estar como: 'calculo_repasse'
         db_table = 'Calculo_Repasse'
+        managed = True
 
     def __str__(self):
-        return self.get_repasses
-    
-    """ def save(self) -> object:
-        return super().save(force_insert, force_update, using, update_fields) """
+        return f'repasses: {self.repasses}'
 
     def get_absolute_url(self):
         return reverse("calculo_repasse_detail", kwargs={"pk": self.pk})

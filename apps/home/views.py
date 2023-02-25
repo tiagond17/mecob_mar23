@@ -18,7 +18,7 @@ from django.db.models import F, Count, FloatField, Q
 
 from .existing_models import Contratos, ContratoParcelas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import CadCliente, Calculo_Repasse
+from .models import Calculo_Repasse, CadCliente
 
 
 @login_required(login_url="/login/")
@@ -152,6 +152,14 @@ def pages(request):
             if request.method == 'POST':
                 pass
             pass
+        
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                            select SUM(vl_pago) as valor_pago, sum(me) as honorarios from calculo_repasse where dt_credito = "2022-09-26"
+                        """)
+                context['valores_totais_bradesco'] = cursor.fetchall()
+
+            
 
         elif load_template == 'form_elements.html':
             if request.method == "POST":
@@ -181,6 +189,7 @@ def pages(request):
             if request.method == 'POST':
                 pass
             with connection.cursor() as cursor:
+                #! provavelmente seria melhor utilizar o cp.dt_credito ao inves do cr.dt_credito
                 cursor.execute(
                     """
                         SELECT
@@ -261,9 +270,6 @@ def pages(request):
         html_template = loader.get_template('home/page-500.html')
         return HttpResponse(html_template.render(context, request)) """
 
-# no mes de setembro quero ver os vendedores em aberto, os contratos
-# filtro pela data de vencimento dia 1 do 8 ate 21 do 8
-
 
 def consulta_por_data(request):
     context: dict = {}
@@ -272,7 +278,7 @@ def consulta_por_data(request):
         data_fim = request.POST.get('data-fim')  # 2022-08-21:str
         date_data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
         date_date_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
-        # selecione todos os contratos em que as suas parcelas estejam dentro do intervalo de datas
+        #selecione todos os contratos em que as suas parcelas estejam dentro do intervalo de datas
         #contratos = Contratos.objects.filter(parcelas__dt_credito__range=(date_data_inicio, date_date_fim))[:30]
         contratos = Contratos.objects.filter(
             parcelas__dt_credito__gte=date_data_inicio, parcelas__dt_credito__lte=date_date_fim)[:100]
