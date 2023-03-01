@@ -100,24 +100,57 @@
                         <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
                       </p>
                     </form>
-                      <p class="d-block m-t-5">Valor pago: {{valores_totais_bradesco.0.0}}</p>
-                      <p>Honorarios: {{valores_totais_bradesco.0.1}}</p>
+                      <p>Valor pago: R${{valores_totais_bradesco.0.0|intcomma}} | Honorarios: R${{valores_totais_bradesco.0.1|intcomma}} </p>
+                      <p>Honorarios: R${{valores_totais_bradesco.0.1|intcomma}}</p>
                   </div>
                   <div class="card-block table-border-style">
+                    <h5>Comissionistas do Mês</h5>
                     <div class="table-responsive">
                       <table class="table table-hover" id="table-julia">
                         <thead>
                           <tr>
-                            <th>Valor Pago</th>
-                            <th>Honorarios</th>
                             <th>Comissionistas</th>
-                            <th>Repasses</th>
+                            <th>Comissões</th>
                           </tr>
                         </thead>
                         <tbody>
+                          {% for querie in comissoes %}
+                            <tr>
+                              <th>{{querie.0}}</th>
+                              <th>R${{querie.1|intcomma}}</th>
+                            </tr>
+                          {% endfor %}
                         </tbody>
                       </table>
                     </div>
+
+                    <br>
+                    <h5>Repasses</h5>
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-julia">
+                        <thead>
+                          <tr>
+                            <th>id Contrato</th>
+                            <th>Nome</th>
+                            <th>banco</th>
+                            <th>Valor Pago</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for querie in repasses %}
+                            <tr>
+                              <th>{{querie.0}}</th>
+                              <th>{{querie.1}}</th>
+                              <th>{{querie.2}}</th>
+                              <th>{{querie.3}}</th>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <h5>Repasses Geral</h5>
+                    
                   </div>
                 </div>
               </div>

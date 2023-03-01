@@ -16,7 +16,7 @@ from django.db.models.functions import TruncDay, Coalesce
 from django.db.models import F, Count, FloatField, Q
 
 
-from .existing_models import Contratos, ContratoParcelas
+from .existing_models import Contratos, ContratoParcelas, Pessoas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente
 
@@ -68,7 +68,7 @@ LEFT JOIN eventos ev ON ev.id = co.eventos_id
 LEFT JOIN calculo_repasse cr ON cr.id_contrato_id = cp.contratos_id AND cr.nu_parcela = cp.nu_parcela
 WHERE cp.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}'
 AND NOT ISNULL(arquivos_id_retorno)
-ORDER BY cp.dt_credito ASC, cp.nu_parcela ASC limit 1000""")
+ORDER BY cp.dt_credito ASC, cp.nu_parcela ASC""")
         result = cursor.fetchall()
         return result
 
@@ -157,10 +157,33 @@ def pages(request):
                 cursor.execute("""
                             select SUM(vl_pago) as valor_pago, sum(me) as honorarios from calculo_repasse where dt_credito = "2022-09-26"
                         """)
-                context['valores_totais_bradesco'] = cursor.fetchall()
+                valores_totais_bradesco = cursor.fetchall()
+                cursor.execute("""
+                    select distinct comissao as comissionista, 
+                    sum(vl_pago*0.05) as comissoes 
+                    from calculo_repasse
+                    where dt_credito = "2022-09-26" and comissao != " -"  and banco="UNICRED"
+                    group by comissao;
+                    """)
+                comissoes = cursor.fetchall()
+                cursor.execute("""
+                    select id_contrato_id,
+                    pessoas.nome,
+                    CASE WHEN id_contrato_id > 12460 OR ISNULL(id_contrato_id) THEN 'UNICRED' ELSE 'BRADESCO' END as banco,
+                    sum(vl_pago)
+                    from calculo_repasse
+                    left join contratos on contratos.id=id_contrato_id
+                    left join pessoas on pessoas.id = contratos.vendedor_id
+                    where dt_credito = "2022-09-26"
+                    group by contratos.vendedor_id
+                """)
+                repasses = cursor.fetchall()
 
-            
-
+            context['comissoes'] = comissoes
+            context['valores_totais_bradesco'] = valores_totais_bradesco
+            context['repasses'] = repasses
+            #*Para filtrar todos os repasses do banco unicred
+            #*Calculo_Repasse.objects.filter(dt_credito="2022-09-26", banco="UNICRED")
         elif load_template == 'form_elements.html':
             if request.method == "POST":
                 data_inicio = request.POST.get('data_inicio')  # 2022-08-01:str
@@ -177,11 +200,11 @@ def pages(request):
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
-                SELECT distinct vendedor_id, nome , nu_parcelas, dt_contrato FROM contratos
-                join pessoas
-                where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
-                and repasse = 'S' and pessoas.id=vendedor_id
-                order by contratos.id desc
+                    SELECT distinct vendedor_id, nome , nu_parcelas, dt_contrato FROM contratos
+                    join pessoas
+                    where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
+                    and repasse = 'S' and pessoas.id=vendedor_id
+                    order by contratos.id desc
                     """
                 )
                 context['sql'] = cursor.fetchall()
@@ -190,6 +213,7 @@ def pages(request):
                 pass
             with connection.cursor() as cursor:
                 #! provavelmente seria melhor utilizar o cp.dt_credito ao inves do cr.dt_credito
+                #! Transforma esse codigo sql em ORM
                 cursor.execute(
                     """
                         SELECT
@@ -255,6 +279,11 @@ def pages(request):
                     """
                 )
                 context['sql'] = cursor.fetchall()
+                
+        elif load_template == 'pessoa_info.html':
+            if request.method == 'POST':
+                pass
+            context['pessoa'] = Pessoas.objects.get(id=733 or None)
                 
             
 

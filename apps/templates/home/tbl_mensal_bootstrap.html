@@ -132,35 +132,7 @@
                               <td>{{querie.27}}</td>
                               <td>{{querie.28}}</td>
                               <td>{{querie.29}}</td>
-                              <td>{{querie.30}}</td>from django.db.models import Q, Sum
-                              from datetime import datetime
-                              
-                              mes = 9
-                              ano = 2022
-                              
-                              # Criar a query base com a tabela principal e os joins
-                              query = Calculo_Repasse.objects.filter(dt_credito__month=mes, dt_credito__year=ano)\
-                                  .select_related('id_contrato', 'id_contrato__vendedor')
-                              
-                              # Criar as expressões para cada dia do mês
-                              expressoes_dias = []
-                              for dia in range(1, 32):
-                                  expressoes_dias.append(Sum('repasses', filter=Q(dt_credito__day=dia)).\
-                                                         alias(f'dia_{dia}'))
-                              
-                              # Adicionar a expressão para o total do mês
-                              expressoes_dias.append(Sum('repasses').alias('total_mes'))
-                              
-                              # Adicionar todas as expressões à query e agrupar por vendedor
-                              query = query.annotate(*expressoes_dias).values('id_contrato__vendedor_id', 
-                                                                              'id_contrato__vendedor__nome')\
-                                                                          .annotate(dia_total=Sum('repasses'))\
-                                                                          .order_by('id_contrato__vendedor__nome')
-                              
-                              # Executar a query e imprimir os resultados
-                              resultados = query.all()
-                              for resultado in resultados:
-                                  print(resultado)
+                              <td>{{querie.30}}</td>
                               <td>{{querie.31}}</td>
                               <td>{{querie.32}}</td>
                               <td>{{querie.33}}</td>
@@ -193,3 +165,35 @@
   })
 </script>
 {% endblock javascripts %}
+
+{% comment %} 
+from django.db.models import Q, Sum
+                              from datetime import datetime
+                              
+                              mes = 9
+                              ano = 2022
+                              
+                              # Criar a query base com a tabela principal e os joins
+                              query = Calculo_Repasse.objects.filter(dt_credito__month=mes, dt_credito__year=ano)\
+                                  .select_related('id_contrato', 'id_contrato__vendedor')
+                              
+                              # Criar as expressões para cada dia do mês
+                              expressoes_dias = []
+                              for dia in range(1, 32):
+                                  expressoes_dias.append(Sum('repasses', filter=Q(dt_credito__day=dia)).\
+                                                         alias(f'dia_{dia}'))
+                              
+                              # Adicionar a expressão para o total do mês
+                              expressoes_dias.append(Sum('repasses').alias('total_mes'))
+                              
+                              # Adicionar todas as expressões à query e agrupar por vendedor
+                              query = query.annotate(*expressoes_dias).values('id_contrato__vendedor_id', 
+                                                                              'id_contrato__vendedor__nome')\
+                                                                          .annotate(dia_total=Sum('repasses'))\
+                                                                          .order_by('id_contrato__vendedor__nome')
+                              
+                              # Executar a query e imprimir os resultados
+                              resultados = query.all()
+                              for resultado in resultados:
+                                  print(resultado)
+{% endcomment %}

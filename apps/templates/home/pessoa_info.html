@@ -1,0 +1,115 @@
+{% extends "layouts/base.html" %}
+{% block title %} Page Blank {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Informações Pessoa e Contratos</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Pessoa Info</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <!-- [ Main Content ] start -->
+            <div class="row">
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>{{pessoa}}</h5>
+                  </div>
+                  <div>
+                    <h1>Clique em um dos contratos para abrir mais informalções</h1>
+                    <button class="btn btn-primary">+ Rateio de contrato</button>
+                    <button class="btn btn-danger">- Rateio de contrato</button>
+                  </div>
+                  <div class="card-block">
+                    <div>
+                      <h5>Contratos Como vendedor</h5>
+                      <div class="table-responsive">
+                        <table id="table-contrato-pessoa" class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Nome</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for contrato_como_vendedor in pessoa.contratos_como_vendedor.all %}
+                            <tr>
+                                <th>{{forloop.counter}}</th>
+                                <td>{{contrato_como_vendedor}}</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <h5>Contratos como Comprador</h5>
+                      <div class="table-responsive">
+                        <table id="table-contrato-pessoa-comprador" class="table table-hover">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Nome</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for contrato_como_comprador in pessoa.contratos_como_comprador.all %}
+                            <tr>
+                                <th>{{forloop.counter}}</th>
+                                <td>{{contrato_como_comprador}}</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- [ Main Content ] end -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-contrato-pessoa').DataTable();
+  })
+  $(document).ready(function(){
+    $('#table-contrato-pessoa-comprador').DataTable();
+  })
+</script>
+{% endblock javascripts %}

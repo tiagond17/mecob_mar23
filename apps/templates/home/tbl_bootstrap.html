@@ -159,6 +159,7 @@
                       <table class="table table-hover" id="table-contratos">
                         <thead>
                           <tr>
+                            <th>Repasse Retido</th>
                             <th>Vendedor ID</th>
                             <th>Nome Vendedor</th>
                             <th>Dia 1</th>
@@ -186,6 +187,7 @@
                         <tbody>
                           {% for querie in sql %}
                             <tr>
+                              <td>R$: 0</td>
                               <th>{{querie.0}}</th>
                               <th>{{querie.1}}</th>
                               <td>{{querie.2}}</td>
@@ -226,7 +228,7 @@
                     <form action="{% url 'home:consulta_por_data' %}" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
-                        <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
+                        <input  type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
                          até 
                         <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
                         <button class="btn btn-primary">Filtrar</button> 
