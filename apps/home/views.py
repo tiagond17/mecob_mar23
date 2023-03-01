@@ -2,7 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-from datetime import datetime
+from datetime import datetime, date
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
@@ -112,6 +112,7 @@ def pages(request):
                     result = cursor.fetchall()
                     context['sql'] = result """
             with connection.cursor() as cursor:
+                #!Transformar em função, igual ao carregar_tabela_cob
                 cursor.execute("""
                 SELECT
                     c.vendedor_id,
@@ -143,6 +144,7 @@ def pages(request):
                     p.nome 
                                 """)
                 context['sql'] = cursor.fetchall()
+                context['mes_consultado'] = "{}, consultado do dia {} ate {}".format(date(month=9, year=2022, day=1).month, date(year=2022,month=9, day=1), date(year=2022,month=9, day=15))
             #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
 
         elif load_template == 'cad_clientes_table_bootstrap.html':
@@ -208,6 +210,9 @@ def pages(request):
                     """
                 )
                 context['sql'] = cursor.fetchall()
+            context['creditos_e_debitos'] = ContratoParcelas.objects.filter(
+                dt_credito__gte='2022-09-01', dt_credito__lte='2022-09-30'
+            ).order_by('-dt_credito')[:1000]
         elif load_template == 'tbl_mensal_bootstrap.html':
             if request.method == 'POST':
                 pass
@@ -334,3 +339,10 @@ def criar_cad_cliente(request):
         result = cursor.fetchall()
         context['sql'] = result
     return HttpResponse('<h1>GET, {}</h1>'.format(context['sql']))
+
+def criar_novo_cadastro_de_credito_e_debito(request, *args, **kwargs):
+    if request.method == 'POST':
+        print(request.POST)
+        return HttpResponse("<h1>POST</h1>")
+    return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
+        

@@ -71,6 +71,26 @@ class Comissao_Vendedor(models.Model):
 
 #?Soma tudo e depois coloca o calculo de 1% do faturamento ?
 
+class Taxa(models.Model):
+    cliente = models.ForeignKey('CadCliente', on_delete=models.CASCADE, blank=True, null=True)
+    tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
+    vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("taxas")
+        verbose_name_plural = _("taxas")
+        db_table = 'taxas'
+        managed = True
+        #ordering = ['id']
+
+    def __str__(self):
+        return self.id
+
+    def get_absolute_url(self):
+        return reverse("taxas_detail", kwargs={"pk": self.pk})
+
+
 
 class Calculo_Repasse(models.Model):
     #id: default django

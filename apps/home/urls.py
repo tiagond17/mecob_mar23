@@ -15,6 +15,10 @@ urlpatterns = [
     
     path("consulta_por_data",views.consulta_por_data, name="consulta_por_data"),
     path("criar_cad_cliente",views.criar_cad_cliente, name="criar_cad_cliente"),
+    path('criar_novo_cadastro_de_credito_e_debito', 
+        views.criar_novo_cadastro_de_credito_e_debito,
+        name="criar_novo_cadastro_de_credito_e_debito"
+    ),
 
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),

@@ -35,12 +35,12 @@
           <div class="page-wrapper">
             <!-- [ Main Content ] start -->
             <div class="row">
-              <h1>Credito Cessão</h1>
               <!-- [ Hover-table ] start -->
               <div class="col-xl-12">
+                <h1>Credito & Debito</h1>
                 <div class="card">
                   <div class="card-header">
-                    <h5>Hover Table</h5>
+                    <h5>Tabela Credito</h5>
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>
@@ -63,10 +63,15 @@
                         </button>
                       </p>
                     </form>
-                    <span class="d-block m-t-5"
-                      >use class <code>table-hover</code> inside table
-                      element</span
-                    >
+                    <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
+                      {% csrf_token %}
+                      <input type="text" name="credor" class="form-control w-25" placeholder="ID do Credor">
+                      <input type="text" name="pagador" class="form-control w-25" placeholder="Id da Pessoa a ser Debitada">
+                      <input type="number" name="valor" class="form-control w-25" placeholder="Valor a ser Creditado">
+                      <input type="date" name="data-credito" class="form-control w-25" id="data-credito" placeholder="Data a ser creditada">
+                      <input type="descricao" name="descricao" class="form-control w-25" placeholder="Descrição do Credito">
+                      <button class="btn btn-primary" type="submit">Novo Credito</button>
+                    </form>
                   </div>
                   <div class="card-block table-border-style">
                     <div class="table-responsive">
@@ -95,9 +100,64 @@
                     </div>
                   </div>
                 </div>
+                {% comment %} OUTRA TABELA {% endcomment %}
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Tabela Debito</h5>
+                    <form action="" method="post">
+                      {% csrf_token %}
+                      <p>
+                        filtrar de
+                        <input
+                          type="date"
+                          name="data-inicio"
+                          id="data-inicio"
+                        />
+                        até
+                        <input type="date" name="data-fim" id="data-fim" />
+                        <button class="btn btn-primary">Filtrar</button>
+                        <button
+                          type="button"
+                          name=""
+                          id=""
+                          class="btn btn-danger"
+                        >
+                          Limpar Filtro
+                        </button>
+                      </p>
+                    </form>
+                    <span class="d-block m-t-5"
+                      >use class <code>table-hover</code> inside table
+                      element</span
+                    >
+                  </div>
+
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-comissoes">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Pagador</th>
+                            <th>Parcela</th>
+                            <th>Valor Pago</th>
+                            <th>Recebedor</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% comment %} {% for credito_e_debito in creditos_e_debitos %}
+                            <tr>
+                              <th>{{forloop.counter}}</th>
+                              <th></th>
+                            </tr>
+                          {% endfor %} {% endcomment %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <!-- conteudo dentro do card caso necessario -->
           </div>
         </div>
       </div>
@@ -113,6 +173,12 @@
 <script>
   $(document).ready(function () {
     $("#table-comissoes").DataTable();
+    //Atribua o valor do campo data-credito para ter o valor da data atual
+    $("#data-credito").datepicker({
+      format: "dd/mm/yyyy",
+    })
   });
+
+  
 </script>
 {% endblock javascripts %}
