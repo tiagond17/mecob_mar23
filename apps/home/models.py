@@ -8,7 +8,6 @@ import math
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-#*pegar o id e nome do vendedor e colocar no cad cliente
 
 """A tabela CadCliente é utilizada para cadastrar novos clientes no sistema
 ou seja, sempre que uma pessoa (que esteja no banco de dados cadastrado na tabela Pessoa)
@@ -69,10 +68,51 @@ class Comissao_Vendedor(models.Model):
     def get_absolute_url(self):
         return reverse("Comissao_Vendedores_detail", kwargs={"pk": self.pk})
 
-#?Soma tudo e depois coloca o calculo de 1% do faturamento ?
+
+    
+class Debito(models.Model):
+    vl_debito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    dt_debitado = models.DateField(_(""), blank=True, null=True)
+    taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
+    descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
+    
+    class Meta:
+        verbose_name = _("debito")
+        verbose_name_plural = _("debitos")
+        db_table = 'debito'
+
+    def __str__(self):
+        return f'{self.cliente} - {self.vl_debito}'
+
+    def get_absolute_url(self):
+        return reverse("debito_detail", kwargs={"pk": self.pk})
+
+
+class Credito(models.Model):
+    dt_creditado = models.DateField(_(""), blank=True, null=True)
+    vl_credito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    descricao = models.CharField(_(""), max_length=128, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("credito")
+        verbose_name_plural = _("creditos")
+        managed = True
+        db_table = 'credito'
+
+    def __str__(self):
+        #retorne o id
+        return f'{self.cliente.nome} - {self.vl_credito}'
+
+    def get_absolute_url(self):
+        return reverse("credito_detail", kwargs={"pk": self.pk})
+
 
 class Taxa(models.Model):
-    cliente = models.ForeignKey('CadCliente', on_delete=models.CASCADE, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    taxas = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
@@ -85,7 +125,7 @@ class Taxa(models.Model):
         #ordering = ['id']
 
     def __str__(self):
-        return self.id
+        return f'{self.cliente.nome or "Sem Nome"}'
 
     def get_absolute_url(self):
         return reverse("taxas_detail", kwargs={"pk": self.pk})

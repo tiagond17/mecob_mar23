@@ -103,7 +103,7 @@
                 {% comment %} OUTRA TABELA {% endcomment %}
                 <div class="card">
                   <div class="card-header">
-                    <h5>Tabela Debito</h5>
+                    <h5>Tabela Debito & Credito</h5>
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>
@@ -138,24 +138,138 @@
                         <thead>
                           <tr>
                             <th>#</th>
+                            <th>Credor</th>
                             <th>Pagador</th>
-                            <th>Parcela</th>
-                            <th>Valor Pago</th>
-                            <th>Recebedor</th>
+                            <th>Data Efetuada</th>
+                            <th>Valor Creditado</th>
+                            <th>Valor Debitado</th>
+                            <th>Descricao</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% comment %} {% for credito_e_debito in creditos_e_debitos %}
+                          {% for querie in creditos_e_debitos_sql %}
                             <tr>
                               <th>{{forloop.counter}}</th>
-                              <th></th>
+                              <th>{{querie.0}}</th>
+                              <th>{{querie.1}}</th>
+                              <th>{{querie.2}}</th>
+                              <th>{{querie.3}}</th>
+                              <th>{{querie.4}}</th>
+                              <th>{{querie.5}}</th>
                             </tr>
-                          {% endfor %} {% endcomment %}
+                          {% endfor %}
                         </tbody>
                       </table>
                     </div>
                   </div>
                 </div>
+
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Credito</h5>
+                    <form action="" method="post">
+                      {% csrf_token %}
+                      <p>
+                        filtrar de
+                        <input
+                          type="date"
+                          name="data-inicio"
+                          id="data-inicio"
+                        />
+                        até
+                        <input type="date" name="data-fim" id="data-fim" />
+                        <button class="btn btn-primary">Filtrar</button>
+                        <button
+                          type="button"
+                          name=""
+                          id=""
+                          class="btn btn-danger"
+                        >
+                          Limpar Filtro
+                        </button>
+                      </p>
+                    </form>
+                    <span class="d-block m-t-5"
+                      >use class <code>table-hover</code> inside table
+                      element</span
+                    >
+                  </div>
+
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-comissoes">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Credor</th>
+                            <th>Pagador</th>
+                            <th>Data Efetuada</th>
+                            <th>Valor Creditado</th>
+                            <th>Valor Debitado</th>
+                            <th>Descricao</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Debito</h5>
+                    <form action="" method="post">
+                      {% csrf_token %}
+                      <p>
+                        filtrar de
+                        <input
+                          type="date"
+                          name="data-inicio"
+                          id="data-inicio"
+                        />
+                        até
+                        <input type="date" name="data-fim" id="data-fim" />
+                        <button class="btn btn-primary">Filtrar</button>
+                        <button
+                          type="button"
+                          name=""
+                          id=""
+                          class="btn btn-danger"
+                        >
+                          Limpar Filtro
+                        </button>
+                      </p>
+                    </form>
+                    <span class="d-block m-t-5"
+                      >use class <code>table-hover</code> inside table
+                      element</span
+                    >
+                  </div>
+
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-comissoes">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Credor</th>
+                            <th>Pagador</th>
+                            <th>Data Efetuada</th>
+                            <th>Valor Creditado</th>
+                            <th>Valor Debitado</th>
+                            <th>Descricao</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+
               </div>
             </div>
           </div>

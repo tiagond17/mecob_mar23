@@ -18,7 +18,7 @@ from django.db.models import F, Count, FloatField, Q
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente
+from .models import Calculo_Repasse, CadCliente, Debito, Credito
 
 
 @login_required(login_url="/login/")
@@ -210,9 +210,26 @@ def pages(request):
                     """
                 )
                 context['sql'] = cursor.fetchall()
+                cursor.execute("""
+                    SELECT
+                        pc.nome AS Credor,
+                        pd.nome AS Pagador,
+                        c.dt_creditado as `Data`,
+                        c.vl_credito AS `Valor Creditado`,
+                        -d.vl_debito AS `Valor Debitado`,
+                        c.descricao AS Descricao
+                    FROM credito c
+                    LEFT JOIN debito d ON d.dt_debitado = c.dt_creditado and d.vl_debito = c.vl_credito
+                    LEFT JOIN pessoas pc ON pc.id = c.cliente_id
+                    LEFT JOIN pessoas pd ON pd.id = d.cliente_id
+                    WHERE c.dt_creditado >= '2022-03-02'
+                    GROUP BY pc.nome, pd.nome, c.vl_credito, d.vl_debito, c.descricao;
+                """)
+                context['creditos_e_debitos_sql'] = cursor.fetchall()
             context['creditos_e_debitos'] = ContratoParcelas.objects.filter(
                 dt_credito__gte='2022-09-01', dt_credito__lte='2022-09-30'
             ).order_by('-dt_credito')[:1000]
+            
         elif load_template == 'tbl_mensal_bootstrap.html':
             if request.method == 'POST':
                 pass
@@ -341,8 +358,27 @@ def criar_cad_cliente(request):
     return HttpResponse('<h1>GET, {}</h1>'.format(context['sql']))
 
 def criar_novo_cadastro_de_credito_e_debito(request, *args, **kwargs):
+    #pegue os valores vindo do form, eles são: credor, pagador, valor, data-credito e descricao
     if request.method == 'POST':
-        print(request.POST)
-        return HttpResponse("<h1>POST</h1>")
+        credor = request.POST.get('credor')
+        pagador = request.POST.get('pagador')
+        valor = request.POST.get('valor')
+        data_credito = request.POST.get('data-credito')
+        descricao = request.POST.get('descricao')
+        #Cire um objeto do tipo Credito e um do Tipo Debito para seus respectivos campos e salve-os
+        Debito.objects.create(
+            cliente = Pessoas.objects.get(id=pagador),
+            vl_debito = valor,
+            dt_debitado = data_credito,
+            descricao = descricao
+        )
+        Credito.objects.create(
+            cliente = Pessoas.objects.get(id=credor),
+            vl_credito = valor,
+            dt_creditado = data_credito,
+            descricao = descricao
+        )
+        return HttpResponseRedirect('/tbl_credito_cessao.html')
+        
     return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
         
