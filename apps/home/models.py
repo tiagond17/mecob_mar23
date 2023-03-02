@@ -116,7 +116,7 @@ class Taxa(models.Model):
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
-
+    dt_taxa = models.DateField(_(""), blank=True, null=True)
     class Meta:
         verbose_name = _("taxas")
         verbose_name_plural = _("taxas")

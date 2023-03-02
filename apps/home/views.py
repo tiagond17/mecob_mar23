@@ -2,7 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.shortcuts import render
 from django.db import connection, connections
 from django.db.models import Sum
-from django.db.models.functions import TruncDay, Coalesce
+from django.db.models.functions import TruncDay, Coalesce, ExtractDay
 
 from django.db.models import F, Count, FloatField, Q
 
@@ -226,9 +226,86 @@ def pages(request):
                     GROUP BY pc.nome, pd.nome, c.vl_credito, d.vl_debito, c.descricao;
                 """)
                 context['creditos_e_debitos_sql'] = cursor.fetchall()
-            context['creditos_e_debitos'] = ContratoParcelas.objects.filter(
-                dt_credito__gte='2022-09-01', dt_credito__lte='2022-09-30'
-            ).order_by('-dt_credito')[:1000]
+                cursor.execute("""
+                    SELECT p.id, p.nome AS nome_credor, c.dt_creditado,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 1 THEN c.vl_credito ELSE 0 END) AS dia_1,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 2 THEN c.vl_credito ELSE 0 END) AS dia_2,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 3 THEN c.vl_credito ELSE 0 END) AS dia_3,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 4 THEN c.vl_credito ELSE 0 END) AS dia_4,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 5 THEN c.vl_credito ELSE 0 END) AS dia_5,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 6 THEN c.vl_credito ELSE 0 END) AS dia_6,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 7 THEN c.vl_credito ELSE 0 END) AS dia_7,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 8 THEN c.vl_credito ELSE 0 END) AS dia_8,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 9 THEN c.vl_credito ELSE 0 END) AS dia_9,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 10 THEN c.vl_credito ELSE 0 END) AS dia_10,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 11 THEN c.vl_credito ELSE 0 END) AS dia_11,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 12 THEN c.vl_credito ELSE 0 END) AS dia_12,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 13 THEN c.vl_credito ELSE 0 END) AS dia_13,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 14 THEN c.vl_credito ELSE 0 END) AS dia_14,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 15 THEN c.vl_credito ELSE 0 END) AS dia_15,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 16 THEN c.vl_credito ELSE 0 END) AS dia_16,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 17 THEN c.vl_credito ELSE 0 END) AS dia_17,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 18 THEN c.vl_credito ELSE 0 END) AS dia_18,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 19 THEN c.vl_credito ELSE 0 END) AS dia_19,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 20 THEN c.vl_credito ELSE 0 END) AS dia_20,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 21 THEN c.vl_credito ELSE 0 END) AS dia_21,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 22 THEN c.vl_credito ELSE 0 END) AS dia_22,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 23 THEN c.vl_credito ELSE 0 END) AS dia_23,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 24 THEN c.vl_credito ELSE 0 END) AS dia_24,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 25 THEN c.vl_credito ELSE 0 END) AS dia_25,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 26 THEN c.vl_credito ELSE 0 END) AS dia_26,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 27 THEN c.vl_credito ELSE 0 END) AS dia_27,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 28 THEN c.vl_credito ELSE 0 END) AS dia_28,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 29 THEN c.vl_credito ELSE 0 END) AS dia_29,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 30 THEN c.vl_credito ELSE 0 END) AS dia_30,
+                    SUM(CASE WHEN DAY(c.dt_creditado) = 31 THEN c.vl_credito ELSE 0 END) AS dia_31,
+                    SUM(c.vl_credito) AS total_credito
+                FROM credito AS c
+                JOIN pessoas AS p ON c.cliente_id = p.id
+                WHERE c.dt_creditado >= '2023-03-01' AND c.dt_creditado < '2023-04-01'
+                GROUP BY p.id, p.nome
+                """)
+                context['creditos'] = cursor.fetchall()
+                cursor.execute("""
+                               SELECT p.id, p.nome AS `Nome do Pagador`, c.dt_debitado,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 1 THEN c.vl_debito ELSE 0 END) AS dia_1,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 2 THEN c.vl_debito ELSE 0 END) AS dia_2,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 3 THEN c.vl_debito ELSE 0 END) AS dia_3,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 4 THEN c.vl_debito ELSE 0 END) AS dia_4,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 5 THEN c.vl_debito ELSE 0 END) AS dia_5,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 6 THEN c.vl_debito ELSE 0 END) AS dia_6,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 7 THEN c.vl_debito ELSE 0 END) AS dia_7,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 8 THEN c.vl_debito ELSE 0 END) AS dia_8,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 9 THEN c.vl_debito ELSE 0 END) AS dia_9,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 10 THEN c.vl_debito ELSE 0 END) AS dia_10,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 11 THEN c.vl_debito ELSE 0 END) AS dia_11,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 12 THEN c.vl_debito ELSE 0 END) AS dia_12,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 13 THEN c.vl_debito ELSE 0 END) AS dia_13,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 14 THEN c.vl_debito ELSE 0 END) AS dia_14,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 15 THEN c.vl_debito ELSE 0 END) AS dia_15,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 16 THEN c.vl_debito ELSE 0 END) AS dia_16,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 17 THEN c.vl_debito ELSE 0 END) AS dia_17,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 18 THEN c.vl_debito ELSE 0 END) AS dia_18,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 19 THEN c.vl_debito ELSE 0 END) AS dia_19,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 20 THEN c.vl_debito ELSE 0 END) AS dia_20,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 21 THEN c.vl_debito ELSE 0 END) AS dia_21,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 22 THEN c.vl_debito ELSE 0 END) AS dia_22,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 23 THEN c.vl_debito ELSE 0 END) AS dia_23,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 24 THEN c.vl_debito ELSE 0 END) AS dia_24,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 25 THEN c.vl_debito ELSE 0 END) AS dia_25,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 26 THEN c.vl_debito ELSE 0 END) AS dia_26,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 27 THEN c.vl_debito ELSE 0 END) AS dia_27,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 28 THEN c.vl_debito ELSE 0 END) AS dia_28,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 29 THEN c.vl_debito ELSE 0 END) AS dia_29,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 30 THEN c.vl_debito ELSE 0 END) AS dia_30,
+                    SUM(CASE WHEN DAY(c.dt_debitado) = 31 THEN c.vl_debito ELSE 0 END) AS dia_31,
+                    SUM(c.vl_debito) AS total_debito
+                FROM debito AS c
+                JOIN pessoas AS p ON c.cliente_id = p.id
+                WHERE c.dt_debitado >= '2023-03-01' AND c.dt_debitado < '2023-04-01'
+                GROUP BY p.id, p.nome""")
+                context['debitos'] = cursor.fetchall()
+
             
         elif load_template == 'tbl_mensal_bootstrap.html':
             if request.method == 'POST':

@@ -157,9 +157,9 @@
                       <table class="table table-hover" id="table-contratos">
                         <thead>
                           <tr>
-                            <th>Repasse Retido</th>
                             <th>Vendedor ID</th>
                             <th>Nome Vendedor</th>
+                            <th>Repasse Retido</th>
                             <th>Dia 1</th>
                             <th>Dia 2</th>
                             <th>Dia 3</th>
@@ -176,7 +176,6 @@
                             <th>Dia 14</th>
                             <th>Dia 15</th>
                             <th>Credito</th>
-                            <th>Credito Cessão</th>
                             <th>Taxas</th>
                             <th>Debito</th>
                             <th>Repasses</th>
@@ -185,9 +184,9 @@
                         <tbody>
                           {% for querie in sql %}
                             <tr>
-                              <td>R$: 0</td>
                               <th>{{querie.0}}</th>
                               <th>{{querie.1}}</th>
+                              <td>R$: 0</td>
                               <td>{{querie.2}}</td>
                               <td>{{querie.3}}</td>
                               <td>{{querie.4}}</td>
@@ -204,7 +203,6 @@
                               <td>{{querie.15}}</td>
                               <td>{{querie.16}}</td>
                               <td>Credito</td>
-                              <td>Credito Cessão</td>
                               <td>Taxas</td>
                               <td>Debito</td>
                               <td>{{querie.17}}</td>
