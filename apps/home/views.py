@@ -18,7 +18,7 @@ from django.db.models import F, Count, FloatField, Q
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente, Debito, Credito
+from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa
 
 
 @login_required(login_url="/login/")
@@ -132,17 +132,23 @@ def pages(request):
                     SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
                     SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
                     SUM(CASE WHEN DAY(cr.dt_credito) = 15 THEN cr.repasses ELSE 0 END) AS dia_15,
+                    SUM(credito.vl_credito) as creditos,
+                    SUM(taxas.taxas) as taxas,
+                    SUM(debito.vl_debito) as debitos,
                     SUM(cr.repasses) AS total_repasses
                 FROM
                     calculo_repasse AS cr
                     INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
                     INNER JOIN pessoas AS p ON c.vendedor_id = p.id
+                    LEFT JOIN credito on credito.cliente_id = c.vendedor_id
+                    LEFT JOIN debito on debito.cliente_id = c.vendedor_id
+                    LEFT JOIN taxas on taxas.cliente_id = c.vendedor_id
                 WHERE
                     cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-15'
                 GROUP BY
                     c.vendedor_id,
                     p.nome 
-                                """)
+                """)
                 context['sql'] = cursor.fetchall()
                 context['mes_consultado'] = "{}, consultado do dia {} ate {}".format(date(month=9, year=2022, day=1).month, date(year=2022,month=9, day=1), date(year=2022,month=9, day=15))
             #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
@@ -305,6 +311,7 @@ def pages(request):
                 WHERE c.dt_debitado >= '2023-03-01' AND c.dt_debitado < '2023-04-01'
                 GROUP BY p.id, p.nome""")
                 context['debitos'] = cursor.fetchall()
+            context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-03-01', '2023-03-02'), taxas__gt=0)
 
             
         elif load_template == 'tbl_mensal_bootstrap.html':
@@ -426,7 +433,7 @@ def criar_cad_cliente(request):
     #!calc = valor - taxa
     context = {}
     """ Aplicar os calculos da planilha aqui """
-    if request.method == "post":
+    if request.method == "POST":
         return HttpResponse('<h1>POST</h1>')
     with connection.cursor() as cursor:
         cursor.execute("SELECT tp_contrato, status ,vl_boleto, vl_pago, vl_parcela, nu_parcelas, dados_arquivo_retorno.dt_credito, contrato_parcelas.dt_credito FROM dados_arquivo_retorno, contratos, contrato_parcelas LIMIT 10")
@@ -441,21 +448,43 @@ def criar_novo_cadastro_de_credito_e_debito(request, *args, **kwargs):
         pagador = request.POST.get('pagador')
         valor = request.POST.get('valor')
         data_credito = request.POST.get('data-credito')
+        #data_credito = datetime.strptime(request.POST.get('data-credito'), '%Y-%m-%d').date()
         descricao = request.POST.get('descricao')
-        #Cire um objeto do tipo Credito e um do Tipo Debito para seus respectivos campos e salve-os
+        pagador = Pessoas.objects.get(id=pagador)
+        credor = Pessoas.objects.get(id=credor)
         Debito.objects.create(
-            cliente = Pessoas.objects.get(id=pagador),
+            cliente = pagador,
             vl_debito = valor,
             dt_debitado = data_credito,
-            descricao = descricao
+            descricao = descricao,
         )
         Credito.objects.create(
-            cliente = Pessoas.objects.get(id=credor),
+            cliente = credor,
             vl_credito = valor,
             dt_creditado = data_credito,
-            descricao = descricao
+            descricao = descricao,
         )
         return HttpResponseRedirect('/tbl_credito_cessao.html')
-        
     return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
-        
+
+def criar_nova_taxa(request):
+    if request.method == 'POST':
+        try:
+            cliente = Pessoas.objects.get(id=request.POST.get('id-cliente'))
+        except Pessoas.DoesNotExist:
+            return HttpResponse("<h1>Pessoa não Encontrada</h1>")
+        except Pessoas.MultipleObjectsReturned:
+            return HttpResponse("<h1>Erro: Mais de uma pessoa encontrada</h1>")
+        taxas = request.POST.get('taxas')
+        tipo = request.POST.get('tipo')
+        descricao_taxa = request.POST.get('descricao-taxa')
+        data_taxa = request.POST.get('data-taxa')
+        Taxa.objects.create(
+            cliente = cliente,
+            tipo = tipo,
+            descricao = descricao_taxa,
+            taxas = taxas,
+            dt_taxa = data_taxa
+        )
+        return HttpResponseRedirect('/tbl_credito_cessao.html')
+    return HttpResponse("<h1>GET OR ANY REQUEST</h1>")

@@ -63,14 +63,24 @@
                         </button>
                       </p>
                     </form>
-                    <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
+                    <form method="POST" class="form w-50" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
                       {% csrf_token %}
-                      <input type="text" name="credor" class="form-control w-25" placeholder="ID do Credor">
-                      <input type="text" name="pagador" class="form-control w-25" placeholder="Id da Pessoa a ser Debitada">
-                      <input type="number" name="valor" class="form-control w-25" placeholder="Valor a ser Creditado">
-                      <input type="date" name="data-credito" class="form-control w-25" id="data-credito" placeholder="Data a ser creditada">
-                      <input type="descricao" name="descricao" class="form-control w-25" placeholder="Descrição do Credito">
-                      <button class="btn btn-primary" type="submit">Novo Credito</button>
+                      <input required type="text" name="credor" class="form-control w-50" placeholder="ID do Credor">
+                      <input required type="text" name="pagador" class="form-control w-50" placeholder="Id da Pessoa a ser Debitada">
+                      <input required type="number" name="valor" class="form-control w-50" placeholder="Valor a ser Creditado">
+                      <input required type="date" name="data-credito" class="form-control w-50" id="data-credito" placeholder="Data a ser creditada">
+                      <input type="descricao" name="descricao" class="form-control w-50" placeholder="Descrição do Credito">
+                      <button class="btn btn-success" type="submit">Novo Credito</button>
+                    </form>
+
+                    <form action="{% url 'home:criar_nova_taxa' %}" method="post" class="w-50">
+                      {% csrf_token %}
+                      <input required class="form-control w-50" type="number" name="id-cliente" placeholder="ID Cliente">
+                      <input required class="form-control w-50" type="number" name="taxas" placeholder="Taxas">
+                      <input required class="form-control w-50" type="text" name="tipo" placeholder="Tipo">
+                      <input required type="date" class="form-control w-50" name="data-taxa" placeholder="Data da Taxa">
+                      <input class="form-control w-50" type="text" name="descricao-taxa" placeholder="Descrição da Taxa">
+                      <button class="btn btn-primary" type="submit">Nova taxa</button>
                     </form>
 
                     {% comment %} <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
@@ -359,7 +369,7 @@
                             <th>Dia 29</th>
                             <th>Dia 30</th>
                             <th>Dia 31</th>
-                            <th>Total Credito</th>
+                            <th>Total Debito</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -449,13 +459,24 @@
                         <thead>
                           <tr>
                             <th>#</th>
-                            <th>Nome do Pagador</th>
-                            <th>Descrição</th>
-                            <th>Data</th>
-                            <th>Total Debito</th>
+                            <th>Taxas (Cliente)</th>
+                            <th>Data Taxa</th>
+                            <th>Tipo</th>
+                            <th>Valor da Taxa</th>
+                            <th>Descricao da Taxa</th>
                           </tr>
                         </thead>
                         <tbody>
+                          {% for taxa in taxas %}
+                            <tr>
+                              <th>{{forloop.counter}}</th>
+                              <th>{{taxa.cliente}}</th>
+                              <th>{{taxa.dt_taxa}}</th>
+                              <th>{{taxa.tipo}}</th>
+                              <th>R$:{{taxa.taxas|intcomma}}</th>
+                              <th>{{taxa.descricao}}</th>
+                            </tr>
+                          {% endfor %}
                         </tbody>
                       </table>
                     </div>

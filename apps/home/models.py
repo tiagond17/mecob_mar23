@@ -74,7 +74,7 @@ class Debito(models.Model):
     vl_debito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
     dt_debitado = models.DateField(_(""), blank=True, null=True)
-    taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
+    #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
     
     class Meta:
@@ -92,7 +92,7 @@ class Debito(models.Model):
 class Credito(models.Model):
     dt_creditado = models.DateField(_(""), blank=True, null=True)
     vl_credito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
+    #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
     cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=128, blank=True, null=True)
 
@@ -117,6 +117,7 @@ class Taxa(models.Model):
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
     dt_taxa = models.DateField(_(""), blank=True, null=True)
+    
     class Meta:
         verbose_name = _("taxas")
         verbose_name_plural = _("taxas")
@@ -125,7 +126,7 @@ class Taxa(models.Model):
         #ordering = ['id']
 
     def __str__(self):
-        return f'{self.cliente.nome or "Sem Nome"}'
+        return f"{self.taxas}"
 
     def get_absolute_url(self):
         return reverse("taxas_detail", kwargs={"pk": self.pk})
