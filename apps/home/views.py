@@ -115,39 +115,50 @@ def pages(request):
                 #!Transformar em função, igual ao carregar_tabela_cob
                 cursor.execute("""
                 SELECT
-                    c.vendedor_id,
-                    p.nome AS nome_vendedor,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
-                    SUM(CASE WHEN DAY(cr.dt_credito) = 15 THEN cr.repasses ELSE 0 END) AS dia_15,
-                    SUM(credito.vl_credito) as creditos,
-                    SUM(taxas.taxas) as taxas,
-                    SUM(debito.vl_debito) as debitos,
-                    SUM(cr.repasses) AS total_repasses
+                c.vendedor_id,
+                p.nome AS nome_vendedor,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
+                SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
+                SUM(DISTINCT credito.vl_credito) as tt_creditos,
+                SUM(DISTINCT taxas.taxas) as tt_taxas,
+                SUM(DISTINCT debito.vl_debito) as tt_debitos,
+                SUM(cr.repasses) 
+                    - SUM(DISTINCT COALESCE(debito.vl_debito, 0)) 
+                    - SUM(DISTINCT COALESCE(taxas.taxas, 0)) 
+                    + SUM(DISTINCT COALESCE(credito.vl_credito, 0))
+                    AS total_repasses
                 FROM
-                    calculo_repasse AS cr
-                    INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
-                    INNER JOIN pessoas AS p ON c.vendedor_id = p.id
-                    LEFT JOIN credito on credito.cliente_id = c.vendedor_id
-                    LEFT JOIN debito on debito.cliente_id = c.vendedor_id
-                    LEFT JOIN taxas on taxas.cliente_id = c.vendedor_id
+                calculo_repasse AS cr
+                INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
+                INNER JOIN pessoas AS p ON c.vendedor_id = p.id
+                LEFT JOIN (
+                SELECT cliente_id, SUM(vl_credito) AS vl_credito 
+                FROM credito 
+                GROUP BY cliente_id
+                ) AS credito ON credito.cliente_id = c.vendedor_id
+
+                LEFT JOIN (
+                SELECT cliente_id, SUM(vl_debito) AS vl_debito 
+                FROM debito 
+                GROUP BY cliente_id
+                ) AS debito ON debito.cliente_id = c.vendedor_id
+                LEFT JOIN taxas on taxas.cliente_id = c.vendedor_id
                 WHERE
-                    cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-15'
+                cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-14'
                 GROUP BY
-                    c.vendedor_id,
-                    p.nome 
+                c.vendedor_id, p.nome
                 """)
                 context['sql'] = cursor.fetchall()
                 context['mes_consultado'] = "{}, consultado do dia {} ate {}".format(date(month=9, year=2022, day=1).month, date(year=2022,month=9, day=1), date(year=2022,month=9, day=15))

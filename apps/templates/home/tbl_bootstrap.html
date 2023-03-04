@@ -128,11 +128,11 @@
               <!-- [ Hover-table ] end -->
 
 
-              <h1>Quinzenal</h1>
               <!-- [ Hover-table ] start -->
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
+                    <h1>Quinzenal</h1>
                     <h5>Mes consultado: {{mes_consultado}}</h5>
                     <form action="" method="post">
                       {% csrf_token %}
@@ -174,7 +174,6 @@
                             <th>Dia 12</th>
                             <th>Dia 13</th>
                             <th>Dia 14</th>
-                            <th>Dia 15</th>
                             <th>Credito</th>
                             <th>Taxas</th>
                             <th>Debito</th>
@@ -207,7 +206,6 @@
                               <td>{{querie.17}}</td>
                               <td>{{querie.18}}</td>
                               <td>{{querie.19}}</td>
-                              <td>{{querie.20}}</td>
                             </tr>
                           {% endfor %}
                         </tbody>

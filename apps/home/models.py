@@ -131,8 +131,6 @@ class Taxa(models.Model):
     def get_absolute_url(self):
         return reverse("taxas_detail", kwargs={"pk": self.pk})
 
-
-
 class Calculo_Repasse(models.Model):
     #id: default django
     #TODO: o id_contrato e o id_vendedor são instancias de Contratos e Pessoas, alterar o nome para vendedor e contrato

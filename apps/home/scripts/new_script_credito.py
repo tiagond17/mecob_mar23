@@ -1,12 +1,13 @@
 from django.db.models import Sum
 from django.shortcuts import render
 from datetime import datetime, timedelta
-from .models import Credito, Pessoas
+from ..models import Credito, Pessoas
 
 def minha_view(request):
     context = {}
     pessoas = Pessoas.objects.all()
     creditos = Credito.objects.filter(dt_creditado__month=datetime.now().month)
+    #substituir o 31 para o ultimo dia do mes
     dias_do_mes = [(datetime.now().replace(day=1) + timedelta(days=i)).day for i in range(31)]
     
     for pessoa in pessoas:
@@ -33,15 +34,15 @@ def minha_view(request):
     <tbody>
       {% for dia in dias_do_mes %}
         <tr>
-          <td>{{ dia }}/{{ agora|date:"F" }}</td>
-          <td>{{ credito_dict.f'dia_{dia}'|floatformat:2 }}</td>
+          <td>{{ dia }}</td>
+          <td>{{ credito_dict.f'dia_{dia}' }}</td>
         </tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr>
         <td>Total</td>
-        <td>{{ credito_dict.total_credito|floatformat:2 }}</td>
+        <td>{{ credito_dict.total_credito}}</td>
       </tr>
     </tfoot>
   </table>
