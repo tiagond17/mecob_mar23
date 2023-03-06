@@ -45,28 +45,6 @@ class CadCliente(models.Model):
     def get_absolute_url(self):
         return reverse("cad_cliente_model_detail", kwargs={"pk": self.pk})
 
-class Comissao_Vendedor(models.Model):
-    #id, default django
-    comissao = models.DecimalField(_(""), max_digits=5, decimal_places=2)
-    vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
-    taxa_percentual = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    taxa_de_comissao = models.DecimalField(_(""), max_digits=5, decimal_places=2, default=1/100, blank=True, null=True)
-    nome = models.CharField(_(""), max_length=128, blank=True, null=True)
-    id_contrato = models.ForeignKey('Contratos', on_delete=models.CASCADE, blank=True, null=True)
-    numero_contrato = models.IntegerField(_(""), blank=True, null=True)
-    codigo_parcela = models.IntegerField(_(""), blank=True, null=True)
-
-    class Meta:
-        verbose_name = _("Comissao_Vendedor")
-        verbose_name_plural = _("Comissao_Vendedores")
-        db_table = 'comissao_vendedor'
-        managed = True
-
-    def __str__(self):
-        return f'{self.nome}, comissao: {self.comissao}'
-
-    def get_absolute_url(self):
-        return reverse("Comissao_Vendedores_detail", kwargs={"pk": self.pk})
 
 class RepasseRetido(models.Model):
     cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)

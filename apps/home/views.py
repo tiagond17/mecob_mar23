@@ -290,10 +290,10 @@ def pages(request):
                     SUM(CASE WHEN DAY(c.dt_creditado) = 30 THEN c.vl_credito ELSE 0 END) AS dia_30,
                     SUM(CASE WHEN DAY(c.dt_creditado) = 31 THEN c.vl_credito ELSE 0 END) AS dia_31,
                     SUM(c.vl_credito) AS total_credito
-                FROM credito AS c
-                JOIN pessoas AS p ON c.cliente_id = p.id
-                WHERE c.dt_creditado >= '2023-03-01' AND c.dt_creditado < '2023-04-01'
-                GROUP BY p.id, p.nome
+                    FROM credito AS c
+                    JOIN pessoas AS p ON c.cliente_id = p.id
+                    WHERE c.dt_creditado >= '2023-03-01' AND c.dt_creditado < '2023-04-01'
+                    GROUP BY p.id, p.nome
                 """)
                 context['creditos'] = cursor.fetchall()
                 cursor.execute("""
@@ -330,10 +330,11 @@ def pages(request):
                     SUM(CASE WHEN DAY(c.dt_debitado) = 30 THEN c.vl_debito ELSE 0 END) AS dia_30,
                     SUM(CASE WHEN DAY(c.dt_debitado) = 31 THEN c.vl_debito ELSE 0 END) AS dia_31,
                     SUM(c.vl_debito) AS total_debito
-                FROM debito AS c
-                JOIN pessoas AS p ON c.cliente_id = p.id
-                WHERE c.dt_debitado >= '2023-03-01' AND c.dt_debitado < '2023-04-01'
-                GROUP BY p.id, p.nome""")
+                    FROM debito AS c
+                    JOIN pessoas AS p ON c.cliente_id = p.id
+                    WHERE c.dt_debitado >= '2023-03-01' AND c.dt_debitado < '2023-04-01'
+                    GROUP BY p.id, p.nome
+                    """)
                 context['debitos'] = cursor.fetchall()
             context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-03-01', '2023-03-02'), taxas__gt=0)
 
