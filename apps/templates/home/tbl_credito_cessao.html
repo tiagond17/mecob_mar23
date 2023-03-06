@@ -82,6 +82,14 @@
                       <input class="form-control w-50" type="text" name="descricao-taxa" placeholder="Descrição da Taxa">
                       <button class="btn btn-primary" type="submit">Nova taxa</button>
                     </form>
+                    <form action="{% url 'home:criar_novo_repasse_retido' %}" method="post" class="w-50">
+                      {% csrf_token %}
+                      <input required class="form-control w-50" type="number" name="id-cliente" placeholder="ID Cliente">
+                      <input required class="form-control w-50" type="number" name="valor" placeholder="valor">
+                      <input required class="form-control w-50" type="text" name="tipo" placeholder="Tipo">
+                      <input required type="date" class="form-control w-50" name="data-repasse-retido" placeholder="Repasse Retido">
+                      <button class="btn btn-warning" type="submit">Novo Repasse Retido</button>
+                    </form>
 
                     {% comment %} <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
                       {% csrf_token %}

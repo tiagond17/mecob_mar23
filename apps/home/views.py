@@ -18,7 +18,7 @@ from django.db.models import F, Count, FloatField, Q
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa
+from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
 
 
 @login_required(login_url="/login/")
@@ -117,6 +117,7 @@ def pages(request):
                 SELECT
                 c.vendedor_id,
                 p.nome AS nome_vendedor,
+                repasse_retido.vlr_rep_retido as valor_repasse_retido,
                 SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
                 SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
                 SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
@@ -134,9 +135,9 @@ def pages(request):
                 SUM(DISTINCT credito.vl_credito) as tt_creditos,
                 SUM(DISTINCT taxas.taxas) as tt_taxas,
                 SUM(DISTINCT debito.vl_debito) as tt_debitos,
-                SUM(cr.repasses) 
-                    - SUM(DISTINCT COALESCE(debito.vl_debito, 0)) 
-                    - SUM(DISTINCT COALESCE(taxas.taxas, 0)) 
+                SUM(cr.repasses)
+                    - SUM(DISTINCT COALESCE(debito.vl_debito, 0))
+                    - SUM(DISTINCT COALESCE(taxas.taxas, 0))
                     + SUM(DISTINCT COALESCE(credito.vl_credito, 0))
                     AS total_repasses
                 FROM
@@ -154,7 +155,19 @@ def pages(request):
                 FROM debito 
                 GROUP BY cliente_id
                 ) AS debito ON debito.cliente_id = c.vendedor_id
-                LEFT JOIN taxas on taxas.cliente_id = c.vendedor_id
+
+                LEFT JOIN (
+                    SELECT cliente_id, SUM(taxas) as taxas
+                    FROM taxas
+                    group by cliente_id
+                ) as taxas on taxas.cliente_id = c.vendedor_id
+
+                LEFT JOIN (
+                    SELECT cliente_id, sum(vlr_rep_retido) as vlr_rep_retido
+                    from repasse_retido
+                    group by cliente_id
+                ) as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
+
                 WHERE
                 cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-14'
                 GROUP BY
@@ -499,3 +512,18 @@ def criar_nova_taxa(request):
         )
         return HttpResponseRedirect('/tbl_credito_cessao.html')
     return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
+
+def criar_novo_repasse_retido(request, *args, **kwargs):
+    if request.method == 'POST':
+        id_cliente = request.POST.get('id-cliente')
+        valor = request.POST.get('valor')
+        tipo = request.POST.get('tipo')
+        data_repasse_retido = request.POST.get('data-repasse-retido')
+        RepasseRetido.objects.create(
+            cliente=Pessoas.objects.get(id=id_cliente),
+            vlr_rep_retido=valor,
+            tipo = tipo,
+            dt_rep_retido = data_repasse_retido
+        )
+        return HttpResponseRedirect('/tbl_credito_cessao.html')
+    return HttpResponse(" <h1>GET</h1> ")

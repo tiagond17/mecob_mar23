@@ -68,6 +68,23 @@ class Comissao_Vendedor(models.Model):
     def get_absolute_url(self):
         return reverse("Comissao_Vendedores_detail", kwargs={"pk": self.pk})
 
+class RepasseRetido(models.Model):
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    vlr_rep_retido = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    dt_rep_retido = models.DateField(_(""), blank=True, null=True)
+    tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
+    
+    class Meta:
+        verbose_name = _("RepasseRetido")
+        verbose_name_plural = _("RepasseRetidos")
+        db_table = 'repasse_retido'
+        managed = True
+
+    def __str__(self):
+        return f'{self.cliente.nome or None}'
+
+    def get_absolute_url(self):
+        return reverse("RepasseRetido_detail", kwargs={"pk": self.pk})
 
     
 class Debito(models.Model):
