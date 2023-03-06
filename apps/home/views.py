@@ -21,6 +21,7 @@ from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
 
 
+
 @login_required(login_url="/login/")
 def index(request):
     context = {'segment': 'index'}
@@ -115,65 +116,76 @@ def pages(request):
                 #!Transformar em função, igual ao carregar_tabela_cob
                 cursor.execute("""
                 SELECT
-                c.vendedor_id,
-                p.nome AS nome_vendedor,
-                repasse_retido.vlr_rep_retido as valor_repasse_retido,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
-                SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
-                SUM(DISTINCT credito.vl_credito) as tt_creditos,
-                SUM(DISTINCT taxas.taxas) as tt_taxas,
-                SUM(DISTINCT debito.vl_debito) as tt_debitos,
-                SUM(cr.repasses)
-                    - SUM(DISTINCT COALESCE(debito.vl_debito, 0))
-                    - SUM(DISTINCT COALESCE(taxas.taxas, 0))
-                    + SUM(DISTINCT COALESCE(credito.vl_credito, 0))
-                    AS total_repasses
-                FROM
-                calculo_repasse AS cr
-                INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
-                INNER JOIN pessoas AS p ON c.vendedor_id = p.id
-                LEFT JOIN (
-                SELECT cliente_id, SUM(vl_credito) AS vl_credito 
-                FROM credito 
-                GROUP BY cliente_id
-                ) AS credito ON credito.cliente_id = c.vendedor_id
+c.vendedor_id,
+p.nome AS nome_vendedor,
+repasse_retido.vlr_rep_retido as valor_repasse_retido,
+cr.dt_credito,
+SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
+SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
+SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
+SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
+SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
+SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
+SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
+SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
+SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
+SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
+SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
+SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
+SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
+SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
+SUM(DISTINCT credito.vl_credito) as tt_creditos,
+SUM(DISTINCT taxas.taxas) as tt_taxas,
+SUM(DISTINCT debito.vl_debito) as tt_debitos,
+SUM(cr.repasses)
+	+ SUM(DISTINCT COALESCE(repasse_retido.vlr_rep_retido,0))
+	- SUM(DISTINCT COALESCE(debito.vl_debito, 0))
+    - SUM(DISTINCT COALESCE(taxas.taxas, 0))
+    + SUM(DISTINCT COALESCE(credito.vl_credito, 0))
+    AS total_repasses
+FROM
+calculo_repasse AS cr
+INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
+INNER JOIN pessoas AS p ON c.vendedor_id = p.id
 
-                LEFT JOIN (
-                SELECT cliente_id, SUM(vl_debito) AS vl_debito 
-                FROM debito 
-                GROUP BY cliente_id
-                ) AS debito ON debito.cliente_id = c.vendedor_id
+LEFT JOIN (
+  SELECT cliente_id, SUM(vl_credito) AS vl_credito 
+  FROM credito
+  WHERE dt_creditado BETWEEN '2022-09-01' AND '2022-09-14'
+  GROUP BY cliente_id
+)
+AS credito ON credito.cliente_id = c.vendedor_id
 
-                LEFT JOIN (
-                    SELECT cliente_id, SUM(taxas) as taxas
-                    FROM taxas
-                    group by cliente_id
-                ) as taxas on taxas.cliente_id = c.vendedor_id
+LEFT JOIN (
+  SELECT cliente_id, SUM(vl_debito) AS vl_debito 
+  FROM debito
+  WHERE dt_debitado BETWEEN '2022-09-01' AND '2022-09-14'
+  GROUP BY cliente_id
+)
+AS debito ON debito.cliente_id = c.vendedor_id
 
-                LEFT JOIN (
-                    SELECT cliente_id, sum(vlr_rep_retido) as vlr_rep_retido
-                    from repasse_retido
-                    group by cliente_id
-                ) as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
+LEFT JOIN (
+	SELECT cliente_id, SUM(taxas) as taxas
+    FROM taxas
+	WHERE dt_taxa BETWEEN '2022-09-01' AND '2022-09-14'
+    GROUP BY cliente_id
+)
+as taxas on taxas.cliente_id = c.vendedor_id
 
-                WHERE
-                cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-14'
-                GROUP BY
-                c.vendedor_id, p.nome
+LEFT JOIN (
+	SELECT cliente_id, SUM(vlr_rep_retido) as vlr_rep_retido
+    from repasse_retido
+    WHERE dt_rep_retido BETWEEN '2022-09-01' AND '2022-09-14'
+    group by cliente_id
+) 
+as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
+WHERE
+cr.dt_credito BETWEEN '2022-09-01' AND '2022-09-14'
+GROUP BY
+c.vendedor_id, p.nome
                 """)
                 context['sql'] = cursor.fetchall()
+                context['qtd_cols'] = [n for n in range(0, len(context.get('sql')[0]))]
                 context['mes_consultado'] = "{}, consultado do dia {} ate {}".format(date(month=9, year=2022, day=1).month, date(year=2022,month=9, day=1), date(year=2022,month=9, day=15))
             #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
 
@@ -528,3 +540,12 @@ def criar_novo_repasse_retido(request, *args, **kwargs):
         )
         return HttpResponseRedirect('/tbl_credito_cessao.html')
     return HttpResponse(" <h1>GET</h1> ")
+
+def filtrar_tabela_quinzenal(request, *args, **kwargs):
+    if request.method == 'POST':
+        data_inicio = datetime.strptime(request.POST.get('data-inicio'), '%Y-%m-%d')
+        data_fim = datetime.strptime(request.POST.get('data-fim'), '%Y-%m-%d')
+        #quantos dias de diferença tem entre a data_inciio e data_fim
+        diferenca = (data_fim - data_inicio).days
+        return HttpResponseRedirect('/tbl_bootstrap.html', {'diferenca': diferenca})
+    return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")

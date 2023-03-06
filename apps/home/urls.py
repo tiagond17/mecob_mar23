@@ -24,6 +24,10 @@ urlpatterns = [
         views.criar_novo_repasse_retido, 
         name="criar_novo_repasse_retido"
     ),
+    path("filtrar_tabela_quinzenal",
+        views.filtrar_tabela_quinzenal,
+        name="filtrar_tabela_quinzenal"
+    ),
 
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
