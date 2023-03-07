@@ -121,10 +121,15 @@
                     <h5>Quinzenal</h5>
                     <form method="post" action="{% url 'home:filtrar_tabela_quinzenal' %}">
                       {% csrf_token %}
-                      data inicio <input required type="date" id="data-inicio" name="data-inicio" value="2022-09-15">
-                      data fim <input required type="date" id="data-fim" name="data-fim" value="2022-09-30">
+                      data inicio <input required type="date" id="data-inicio" name="data-inicio" >
+                      data fim <input required type="date" id="data-fim" name="data-fim">
                       <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
+                    </form>
+                    <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha' %}" role="button">Exportar Consulta .xlsx</a>
+                    <form action="" method="post" enctype="multipart/form-data">
+                      {% csrf_token %}
+                      <input type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
                     </form>
                   </div>
                   <div class="card-block table-border-style">
@@ -135,7 +140,6 @@
                             <th>Vendedor ID</th>
                             <th>Nome Vendedor</th>
                             <th>Valor Repasse Retido</th>
-                            <th>Data Credito</th>
                             {% for dia in dias_de_consulta %}
                               <th>Dia {{dia}}</th>
                             {% endfor %}
@@ -168,8 +172,6 @@
                         <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
                       </p>
                     </form>
-                    <span class="d-block m-t-5"
-                      >use class <code>table-hover</code> inside table element</span>
                   </div>
                   <div class="card-block table-border-style">
                     <div class="table-responsive">

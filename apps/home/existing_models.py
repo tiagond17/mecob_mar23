@@ -225,7 +225,7 @@ class Eventos(models.Model):
     
     def __str__(self):
         return f'nome: {self.nome}, leiloeiro: {self.leiloeiro}'
-        
+
 
     class Meta:
         managed = False

@@ -2,16 +2,22 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, FileResponse
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.db import connection, connections
 from django.db.models import Sum
 from django.db.models.functions import TruncDay, Coalesce, ExtractDay
+import tempfile
+import os
+import json
+import openpyxl
+from decimal import Decimal
 
 from django.db.models import F, Count, FloatField, Q
 
@@ -20,6 +26,11 @@ from .existing_models import Contratos, ContratoParcelas, Pessoas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
 
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
 
 
 @login_required(login_url="/login/")
@@ -466,8 +477,6 @@ def consulta_por_data(request):
 
 
 def criar_cad_cliente(request):
-    #!repasse = valor - taxa - me
-    #!calc = valor - taxa
     context = {}
     """ Aplicar os calculos da planilha aqui """
     if request.method == "POST":
@@ -560,7 +569,6 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             c.vendedor_id,
             p.nome AS nome_vendedor,
             repasse_retido.vlr_rep_retido as valor_repasse_retido,
-            cr.dt_credito,
             {', '.join(dias)},
             SUM(DISTINCT credito.vl_credito) as tt_creditos,
             SUM(DISTINCT taxas.taxas) as tt_taxas,
@@ -613,25 +621,26 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             cursor.execute(consulta)
             context['data'] = cursor.fetchall()
         
+        request.session['serialized_data'] = json.dumps(context['data'], cls=DecimalEncoder)
+        
         context['dias_de_consulta'] = dias_de_consulta
         tbody = ""
         for resultado in context['data']:
             vendedor_id = resultado[0]
             nome_vendedor = resultado[1]
             valor_repasse_retido = resultado[2]
-            dt_credito = resultado[3]
-            valores_diarios = resultado[4:-4]
+            #dt_credito = resultado[3]
+            valores_diarios = resultado[3:-4]
             total_creditos = resultado[-4]
             total_taxas = resultado[-3]
             totaL_debitos = resultado[-2]
             total_repasses = resultado[-1]
-            
+
             linha = f"""
             <tr>
                 <td>{vendedor_id}</td>
                 <td>{nome_vendedor}</td>
                 <td>{valor_repasse_retido}</td>
-                <td>{dt_credito}</td>
             """
             for valor_dia in valores_diarios:
                 linha += f"<td>{valor_dia}</td>"
@@ -644,6 +653,27 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             </tr>
             """
             tbody += linha
+
         context['tbody'] = tbody
         return render(request, 'home/tbl_bootstrap.html', context=context)
     return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
+
+def upload_planilha(requset, *args, **kwargs):
+    return HttpResponseRedirect('/tbl_credito_cessao.html')
+
+def download_planilha(request, *args, **kwargs):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filepath = os.path.join(tmpdir, f'planilha_consulta_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet['A1'] = 'ID Vendedor'
+        sheet['B1'] = 'Nome Vendedor'
+        sheet['C1'] = 'Valor Repasse Retido'
+        for i, row in enumerate(request.session.get('serialized_data')):
+            for j, value in enumerate(row):
+                sheet.cell(row=i+2, column=j+1, value=value)
+        workbook.save(filepath)
+        with open(filepath, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
