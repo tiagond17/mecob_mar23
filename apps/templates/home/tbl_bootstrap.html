@@ -39,11 +39,10 @@
           <div class="page-wrapper">
             <div class="row">
               <!-- [ Hover-table ] start -->
-              <div class="col-xl-12">
+              {% comment %} <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
                     <h5>Quinzenal</h5>
-                    {% comment %} <h5>Mes consultado: {{mes_consultado}}</h5> {% endcomment %}
                     <form method="post" action="{% url 'home:filtrar_tabela_quinzenal' %}">
                       {% csrf_token %}
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" value="2022-09-15">
@@ -113,8 +112,47 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> {% endcomment %}
               <!-- [ Hover-table ] end -->
+
+              <div class="col-xl-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Quinzenal</h5>
+                    <form method="post" action="{% url 'home:filtrar_tabela_quinzenal' %}">
+                      {% csrf_token %}
+                      data inicio <input required type="date" id="data-inicio" name="data-inicio" value="2022-09-15">
+                      data fim <input required type="date" id="data-fim" name="data-fim" value="2022-09-30">
+                      <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                      <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
+                    </form>
+                  </div>
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-contratos">
+                        <thead>
+                          <tr>
+                            <th>Vendedor ID</th>
+                            <th>Nome Vendedor</th>
+                            <th>Valor Repasse Retido</th>
+                            <th>Data Credito</th>
+                            {% for dia in dias_de_consulta %}
+                              <th>Dia {{dia}}</th>
+                            {% endfor %}
+                            <th>Creditos</th>
+                            <th>Taxas</th>
+                            <th>Debitos</th>
+                            <th>Total Repasses</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{tbody|safe}}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div class="col-xl-12">
                 <div class="card">
@@ -194,4 +232,5 @@
     
   })
 </script>
+{% comment %} <script src="{% static 'assets/js/quinzenal/scripts.js' %}"></script> {% endcomment %}
 {% endblock javascripts %}

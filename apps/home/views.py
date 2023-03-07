@@ -542,10 +542,108 @@ def criar_novo_repasse_retido(request, *args, **kwargs):
     return HttpResponse(" <h1>GET</h1> ")
 
 def filtrar_tabela_quinzenal(request, *args, **kwargs):
+    context:dict = dict()
     if request.method == 'POST':
-        data_inicio = datetime.strptime(request.POST.get('data-inicio'), '%Y-%m-%d')
-        data_fim = datetime.strptime(request.POST.get('data-fim'), '%Y-%m-%d')
-        #quantos dias de diferença tem entre a data_inciio e data_fim
-        diferenca = (data_fim - data_inicio).days
-        return HttpResponseRedirect('/tbl_bootstrap.html', {'diferenca': diferenca})
+        data_inicio = request.POST.get('data-inicio')
+        data_fim = request.POST.get('data-fim')
+        data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+        data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+        
+        dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+
+        dias = []
+        for dia in dias_de_consulta:
+            dias.append(f"SUM(CASE WHEN DAY(cr.dt_credito) = {dia} THEN cr.repasses ELSE 0 END) AS dia_{dia}")
+            
+        consulta = f"""
+        SELECT
+            c.vendedor_id,
+            p.nome AS nome_vendedor,
+            repasse_retido.vlr_rep_retido as valor_repasse_retido,
+            cr.dt_credito,
+            {', '.join(dias)},
+            SUM(DISTINCT credito.vl_credito) as tt_creditos,
+            SUM(DISTINCT taxas.taxas) as tt_taxas,
+            SUM(DISTINCT debito.vl_debito) as tt_debitos,
+            SUM(cr.repasses)
+                + SUM(DISTINCT COALESCE(repasse_retido.vlr_rep_retido,0))
+                - SUM(DISTINCT COALESCE(debito.vl_debito, 0))
+                - SUM(DISTINCT COALESCE(taxas.taxas, 0))
+                + SUM(DISTINCT COALESCE(credito.vl_credito, 0))
+                AS total_repasses
+        FROM
+            calculo_repasse AS cr
+            INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
+            INNER JOIN pessoas AS p ON c.vendedor_id = p.id
+            LEFT JOIN (
+            SELECT cliente_id, SUM(vl_credito) AS vl_credito 
+            FROM credito
+            WHERE dt_creditado BETWEEN '{data_inicio}' AND '{data_fim}'
+            GROUP BY cliente_id
+            )
+            AS credito ON credito.cliente_id = c.vendedor_id
+            LEFT JOIN (
+            SELECT cliente_id, SUM(vl_debito) AS vl_debito 
+            FROM debito
+            WHERE dt_debitado BETWEEN '{data_inicio}' AND '{data_fim}'
+            GROUP BY cliente_id
+            )
+            AS debito ON debito.cliente_id = c.vendedor_id
+            LEFT JOIN (
+                SELECT cliente_id, SUM(taxas) as taxas
+                FROM taxas
+                WHERE dt_taxa BETWEEN '{data_inicio}' AND '{data_fim}'
+                GROUP BY cliente_id
+            )
+            as taxas on taxas.cliente_id = c.vendedor_id
+            LEFT JOIN (
+                SELECT cliente_id, SUM(vlr_rep_retido) as vlr_rep_retido
+                from repasse_retido
+                WHERE dt_rep_retido BETWEEN '{data_inicio}' AND '{data_fim}'
+                group by cliente_id
+            )
+            as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
+            WHERE
+            cr.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}'
+            GROUP BY
+            c.vendedor_id, p.nome
+        """
+    
+        with connection.cursor() as cursor:
+            cursor.execute(consulta)
+            context['data'] = cursor.fetchall()
+        
+        context['dias_de_consulta'] = dias_de_consulta
+        tbody = ""
+        for resultado in context['data']:
+            vendedor_id = resultado[0]
+            nome_vendedor = resultado[1]
+            valor_repasse_retido = resultado[2]
+            dt_credito = resultado[3]
+            valores_diarios = resultado[4:-4]
+            total_creditos = resultado[-4]
+            total_taxas = resultado[-3]
+            totaL_debitos = resultado[-2]
+            total_repasses = resultado[-1]
+            
+            linha = f"""
+            <tr>
+                <td>{vendedor_id}</td>
+                <td>{nome_vendedor}</td>
+                <td>{valor_repasse_retido}</td>
+                <td>{dt_credito}</td>
+            """
+            for valor_dia in valores_diarios:
+                linha += f"<td>{valor_dia}</td>"
+            
+            linha += f"""
+            <td>{total_creditos}</td>
+            <td>{total_taxas}</td>
+            <td>{totaL_debitos}</td>
+            <td>{total_repasses}</td>
+            </tr>
+            """
+            tbody += linha
+        context['tbody'] = tbody
+        return render(request, 'home/tbl_bootstrap.html', context=context)
     return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
