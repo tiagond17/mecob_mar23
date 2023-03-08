@@ -18,6 +18,7 @@ import os
 import json
 import openpyxl
 from decimal import Decimal
+from openpyxl.utils import get_column_letter
 
 from django.db.models import F, Count, FloatField, Q
 
@@ -658,7 +659,16 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
         return render(request, 'home/tbl_bootstrap.html', context=context)
     return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
 
-def upload_planilha(requset, *args, **kwargs):
+def upload_planilha(request, *args, **kwargs):
+    """Essa função faz upload de uma planilha do tipo xlsx
+    e faz a importação dos dados para o banco de dados.
+
+    Args:
+        request: Requisição ao acessar o metodo
+
+    Returns:
+        _type_: _description_
+    """    
     return HttpResponseRedirect('/tbl_credito_cessao.html')
 
 def download_planilha(request, *args, **kwargs):
@@ -669,7 +679,13 @@ def download_planilha(request, *args, **kwargs):
         sheet['A1'] = 'ID Vendedor'
         sheet['B1'] = 'Nome Vendedor'
         sheet['C1'] = 'Valor Repasse Retido'
-        for i, row in enumerate(request.session.get('serialized_data')):
+        
+        # define a largura das primeiras colunas
+        sheet.column_dimensions[get_column_letter(1)].width = 15
+        sheet.column_dimensions[get_column_letter(2)].width = 30
+        sheet.column_dimensions[get_column_letter(3)].width = 30
+        
+        for i, row in enumerate(json.loads(request.session.get('serialized_data'))):
             for j, value in enumerate(row):
                 sheet.cell(row=i+2, column=j+1, value=value)
         workbook.save(filepath)
