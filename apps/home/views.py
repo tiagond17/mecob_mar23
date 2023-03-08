@@ -6,21 +6,17 @@ from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, FileResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
-from django.db import connection, connections
-from django.db.models import Sum
-from django.db.models.functions import TruncDay, Coalesce, ExtractDay
+from django.db import connection
 import tempfile
 import os
 import json
 import openpyxl
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
-
-from django.db.models import F, Count, FloatField, Q
 
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas
@@ -660,15 +656,11 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
     return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
 
 def upload_planilha(request, *args, **kwargs):
-    """Essa função faz upload de uma planilha do tipo xlsx
-    e faz a importação dos dados para o banco de dados.
-
-    Args:
-        request: Requisição ao acessar o metodo
-
-    Returns:
-        _type_: _description_
-    """    
+    if request.method == 'POST':
+        planilha = request.FILES.get('docpicker')
+        #arquivo esta recebendo com sucesso, azer os devidos tratamentos
+        return HttpResponse(planilha)
+            
     return HttpResponseRedirect('/tbl_credito_cessao.html')
 
 def download_planilha(request, *args, **kwargs):
