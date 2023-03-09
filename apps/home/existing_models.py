@@ -180,6 +180,8 @@ class Contratos(models.Model):
         managed = False
         db_table = 'contratos'
 
+        
+
 
 class DadosArquivoRetorno(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -379,7 +381,7 @@ class Pessoas(models.Model):
     operador = models.CharField(max_length=1, blank=True, null=True)
     
     def __str__(self):
-        return self.nome
+        return f'{self.nome}'
 
     class Meta:
         managed = False

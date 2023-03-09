@@ -23,11 +23,13 @@ from .existing_models import Contratos, ContratoParcelas, Pessoas
 from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
 
-class DecimalEncoder(json.JSONEncoder):
+class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
-        return super(DecimalEncoder, self).default(obj)
+        elif isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
+        return super().default(obj)
 
 
 @login_required(login_url="/login/")
@@ -89,7 +91,7 @@ def pages(request):
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
     try:
-
+        request.session['serialized_data'] = None
         load_template = request.path.split('/')[-1]
 
         if load_template == 'admin':
@@ -196,6 +198,45 @@ c.vendedor_id, p.nome
                 context['qtd_cols'] = [n for n in range(0, len(context.get('sql')[0]))]
                 context['mes_consultado'] = "{}, consultado do dia {} ate {}".format(date(month=9, year=2022, day=1).month, date(year=2022,month=9, day=1), date(year=2022,month=9, day=15))
             #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
+        
+        elif load_template == 'tbl_boletos_avulso.html':
+            if request.method == 'POST':
+                data_inicial = request.POST.get('data-inicio')
+                data_fim = request.POST.get('data-fim')
+                with connection.cursor() as cursor:
+                    cursor.execute(f"""
+                                   SELECT
+                cp.contratos_id as id_contrato,
+                case when not isnull(pev.nome) then pev.nome else 'boleto avulso' end as vendedor,
+                case when not isnull(pec.nome) then pec.nome else peb.nome end as comprador,
+                cp.nu_parcela as nu_parcela,
+                cp.vl_parcela as vl_parcela,
+                cp.vl_pagto,
+                cp.dt_vencimento as dt_vencimento,
+                cp.dt_credito as dt_credito,
+                cp.dt_processo_pagto as dt_processamento,
+                case when cp.contratos_id > 12460 or isnull(cp.contratos_id) then 'UNICRED' else 'BRADESCO' end as banco,
+                co.parcela_primeiro_pagto as parcela_primeiro_pagto,
+                co.nu_parcelas as tt_parcelas,
+                (select count(*) from contrato_parcelas cpx 
+                where cpx.contratos_id = cp.contratos_id 
+                    and (not isnull(dt_pagto) and not dt_pagto = '0000-00-00') ) as tt_quitadas,
+                ev.nome as evento,
+                co.descricao as produto
+                
+            FROM contrato_parcelas cp
+            LEFT JOIN contratos co on co.id = cp.contratos_id
+            LEFT JOIN boletos_avulso bo on bo.id = cp.boletos_avulso_id
+            LEFT JOIN pessoas pec on pec.id = co.comprador_id
+            LEFT JOIN pessoas pev on pev.id = co.vendedor_id
+            LEFT JOIN pessoas peb on peb.id = bo.pessoas_id
+            LEFT JOIN eventos ev on ev.id = co.eventos_id
+            where date(dt_credito) >= '{data_inicial}' AND date(dt_credito) <= '{data_fim}' and isnull(cp.contratos_id)
+            and not isnull(arquivos_id_retorno)
+            order by banco desc, cp.contratos_id  asc""")
+                    context['boletos_avulso'] = cursor.fetchall()
+                #context['boletos_avulso'] = ContratoParcelas.objects.filter(contratos__isnull=True, dt_credito__gte=data_inicial, dt_credito__lte=data_fim)
+            pass
 
         elif load_template == 'cad_clientes_table_bootstrap.html':
             context['cad_clientes'] = CadCliente.objects.all()
@@ -234,14 +275,13 @@ c.vendedor_id, p.nome
             context['comissoes'] = comissoes
             context['valores_totais_bradesco'] = valores_totais_bradesco
             context['repasses'] = repasses
-            #*Para filtrar todos os repasses do banco unicred
-            #*Calculo_Repasse.objects.filter(dt_credito="2022-09-26", banco="UNICRED")
         elif load_template == 'form_elements.html':
             if request.method == "POST":
                 data_inicio = request.POST.get('data_inicio')  # 2022-08-01:str
                 data_fim = request.POST.get('data_fim')  # 2022-08-21:str
                 context['sql'] = preencher_tabela_cob(
                     data_inicio=data_inicio, data_fim=data_fim)
+                request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
             context['form'] = Calculo_RepasseForm()
             #!context['cad_clientes'] = CadCliente.objects.all()
 
@@ -312,7 +352,7 @@ c.vendedor_id, p.nome
                     SUM(c.vl_credito) AS total_credito
                     FROM credito AS c
                     JOIN pessoas AS p ON c.cliente_id = p.id
-                    WHERE c.dt_creditado >= '2023-03-01' AND c.dt_creditado < '2023-04-01'
+                    WHERE c.dt_creditado >= '2022-03-01'
                     GROUP BY p.id, p.nome
                 """)
                 context['creditos'] = cursor.fetchall()
@@ -352,11 +392,12 @@ c.vendedor_id, p.nome
                     SUM(c.vl_debito) AS total_debito
                     FROM debito AS c
                     JOIN pessoas AS p ON c.cliente_id = p.id
-                    WHERE c.dt_debitado >= '2023-03-01' AND c.dt_debitado < '2023-04-01'
+                    WHERE c.dt_debitado >= '2022-03-01'
                     GROUP BY p.id, p.nome
                     """)
                 context['debitos'] = cursor.fetchall()
-            context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-03-01', '2023-03-02'), taxas__gt=0)
+            context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-01-01', '2023-03-02'), taxas__gt=0)
+            context['repasse_retido'] = RepasseRetido.objects.filter(dt_rep_retido__gt="2022-03-01")
 
             
         elif load_template == 'tbl_mensal_bootstrap.html':
@@ -413,6 +454,7 @@ c.vendedor_id, p.nome
                     """
                 )
                 context['sql'] = cursor.fetchall()
+                context['repasses_retidos'] = RepasseRetido.objects.filter(dt_rep_retido__gte="2022-01-01")
                 
         elif load_template == 'tbl_debito_cessao.html':
             if request.method == 'POST':
@@ -618,7 +660,7 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             cursor.execute(consulta)
             context['data'] = cursor.fetchall()
         
-        request.session['serialized_data'] = json.dumps(context['data'], cls=DecimalEncoder)
+        request.session['serialized_data'] = json.dumps(context['data'], cls=CustomJSONEncoder)
         
         context['dias_de_consulta'] = dias_de_consulta
         tbody = ""
@@ -655,17 +697,18 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
         return render(request, 'home/tbl_bootstrap.html', context=context)
     return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
 
-def upload_planilha(request, *args, **kwargs):
+def upload_planilha_quinzenal(request, *args, **kwargs):
     if request.method == 'POST':
         planilha = request.FILES.get('docpicker')
         #arquivo esta recebendo com sucesso, azer os devidos tratamentos
         return HttpResponse(planilha)
-            
     return HttpResponseRedirect('/tbl_credito_cessao.html')
 
-def download_planilha(request, *args, **kwargs):
+def download_planilha_quinzenal(request, *args, **kwargs):
+    if request.session.get('serialized_data') is None:
+        return HttpResponse('Nenhum dado encontrado para download')
     with tempfile.TemporaryDirectory() as tmpdir:
-        filepath = os.path.join(tmpdir, f'planilha_consulta_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        filepath = os.path.join(tmpdir, f'planilha_consulta_quinzenal_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         sheet['A1'] = 'ID Vendedor'
@@ -685,3 +728,51 @@ def download_planilha(request, *args, **kwargs):
             response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
             return response
+
+def download_planilha_cob(request, *args, **kwargs):
+    if request.session.get('serialized_data') is None:
+        return HttpResponse('Nenhum dado encontrado para download')
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filepath = os.path.join(tmpdir, f'planilha_consulta_cob_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet['A1'] = 'ID Contrato'
+        sheet['B1'] = 'Vendedor'
+        sheet['C1'] = 'Comprador'
+        sheet['D1'] = 'N Parcela'
+        sheet['E1'] = 'Valor Parcela'
+        sheet['F1'] = 'Valor Pago'
+        sheet['G1'] = 'Data Vencimento'
+        sheet['H1'] = 'Data Credito'
+        sheet['I1'] = 'Data Procesamento'
+        sheet['J1'] = 'Banco'
+        sheet['K1'] = 'Parcela Paga'
+        sheet['L1'] = 'Total Parcelas'
+        sheet['M1'] = 'Total Quitadas'
+        sheet['N1'] = 'Evento'
+        sheet['O1'] = 'Produto'
+        sheet['P1'] = 'Deposito'
+        sheet['Q1'] = 'Calculo'
+        sheet['R1'] = 'Taxas'
+        sheet['S1'] = 'ADI'
+        sheet['T1'] = 'ME'
+        sheet['U1'] = 'OP'
+        sheet['V1'] = 'Repasses'
+        sheet['W1'] = 'Comissao'
+        for i, row, in enumerate(json.loads(request.session.get('serialized_data'))):
+            for j, value in enumerate(row):
+                sheet.cell(row=i+2, column=j+1, value=value)
+        workbook.save(filepath)
+        with open(filepath, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
+
+def upload_planilha_cob(request, *args, **kwargs):
+    if request.method == 'POST':
+        planilha = request.FILES.get('docpicker')
+        #arquivo esta recebendo com sucesso, azer os devidos tratamentos
+        return HttpResponse(planilha)
+    return HttpResponseRedirect('/form_elements.html')
+def editar_boleto_avulso(request, *args, **kwargs):
+    return HttpResponse("<h1>FUNCIONOU</h1>")

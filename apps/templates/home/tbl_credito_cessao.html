@@ -2,7 +2,10 @@
 {% load utils %} {% load humanize %} {% load static %}
 
 <!-- Specific CSS goes HERE -->
-{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'assets/css/credito_debito_styles.css' %}">
+{% endblock stylesheets %}
+{% block content %}
 
 <!-- [ Main Content ] start -->
 <section class="pcoded-main-container">
@@ -15,15 +18,15 @@
             <div class="row align-items-center">
               <div class="col-md-12">
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Bootstrap Basic Tables</h5>
+                  <h5 class="m-b-10">Credito & Debito</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
                     <a href="/"><i class="feather icon-home"></i></a>
                   </li>
-                  <li class="breadcrumb-item"><a href="#!">Tables</a></li>
+                  <li class="breadcrumb-item"><a href="#!">Tabelas & Formularios</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Basic Tables</a>
+                    <a href="javascript:">Credito & Debito</a>
                   </li>
                 </ul>
               </div>
@@ -37,7 +40,6 @@
             <div class="row">
               <!-- [ Hover-table ] start -->
               <div class="col-xl-12">
-                <h1>Credito & Debito</h1>
                 <div class="card">
                   <div class="card-header">
                     <h5>Tabela Credito</h5>
@@ -63,33 +65,8 @@
                         </button>
                       </p>
                     </form>
-                    <form method="POST" class="form w-50" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
-                      {% csrf_token %}
-                      <input required type="text" name="credor" class="form-control w-50" placeholder="ID do Credor">
-                      <input required type="text" name="pagador" class="form-control w-50" placeholder="Id da Pessoa a ser Debitada">
-                      <input required type="number" name="valor" class="form-control w-50" placeholder="Valor a ser Creditado">
-                      <input required type="date" name="data-credito" class="form-control w-50" id="data-credito" placeholder="Data a ser creditada">
-                      <input type="descricao" name="descricao" class="form-control w-50" placeholder="Descrição do Credito">
-                      <button class="btn btn-success" type="submit">Novo Credito</button>
-                    </form>
-
-                    <form action="{% url 'home:criar_nova_taxa' %}" method="post" class="w-50">
-                      {% csrf_token %}
-                      <input required class="form-control w-50" type="number" name="id-cliente" placeholder="ID Cliente">
-                      <input required class="form-control w-50" type="number" name="taxas" placeholder="Taxas">
-                      <input required class="form-control w-50" type="text" name="tipo" placeholder="Tipo">
-                      <input required type="date" class="form-control w-50" name="data-taxa" placeholder="Data da Taxa">
-                      <input class="form-control w-50" type="text" name="descricao-taxa" placeholder="Descrição da Taxa">
-                      <button class="btn btn-primary" type="submit">Nova taxa</button>
-                    </form>
-                    <form action="{% url 'home:criar_novo_repasse_retido' %}" method="post" class="w-50">
-                      {% csrf_token %}
-                      <input required class="form-control w-50" type="number" name="id-cliente" placeholder="ID Cliente">
-                      <input required class="form-control w-50" type="number" name="valor" placeholder="valor">
-                      <input required class="form-control w-50" type="text" name="tipo" placeholder="Tipo">
-                      <input required type="date" class="form-control w-50" name="data-repasse-retido" placeholder="Repasse Retido">
-                      <button class="btn btn-warning" type="submit">Novo Repasse Retido</button>
-                    </form>
+                    <div class="forms-group">
+                    </div>
 
                     {% comment %} <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
                       {% csrf_token %}
@@ -154,10 +131,6 @@
                         </button>
                       </p>
                     </form>
-                    <span class="d-block m-t-5"
-                      >use class <code>table-hover</code> inside table
-                      element</span
-                    >
                   </div>
 
                   <div class="card-block table-border-style">
@@ -216,6 +189,15 @@
                           Limpar Filtro
                         </button>
                       </p>
+                    </form>
+                    <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
+                      {% csrf_token %}
+                      <input required type="text" name="credor" class="form-control" placeholder="ID do Credor">
+                      <input required type="text" name="pagador" class="form-control" placeholder="Id da Pessoa a ser Debitada">
+                      <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Creditado">
+                      <input required type="date" name="data-credito" class="form-control" id="data-credito" placeholder="Data a ser creditada">
+                      <input type="descricao" name="descricao" class="form-control" placeholder="Descrição do Credito">
+                      <button class="btn btn-success" type="submit">Novo Credito</button>
                     </form>
                   </div>
 
@@ -335,6 +317,15 @@
                         </button>
                       </p>
                     </form>
+                    <form action="{% url 'home:criar_nova_taxa' %}" method="post" class="w-100">
+                      {% csrf_token %}
+                      <input required class="form-control" type="number" name="id-cliente" placeholder="ID Cliente">
+                      <input required class="form-control" type="number" name="taxas" placeholder="Taxas">
+                      <input required class="form-control" type="text" name="tipo" placeholder="Tipo">
+                      <input required type="date" class="form-control" name="data-taxa" placeholder="Data da Taxa">
+                      <input class="form-control" type="text" name="descricao-taxa" placeholder="Descrição da Taxa">
+                      <button class="btn btn-primary" type="submit">Nova taxa</button>
+                    </form>
                   </div>
 
                   <div class="card-block table-border-style">
@@ -453,12 +444,15 @@
                         </button>
                       </p>
                     </form>
-
-                    
-                    <span class="d-block m-t-5"
-                      >use class <code>table-hover</code> inside table
-                      element</span
-                    >
+                    <form action="{% url 'home:criar_nova_taxa' %}" method="post" class="w-100">
+                      {% csrf_token %}
+                      <input required class="form-control" type="number" name="id-cliente" placeholder="ID Cliente">
+                      <input required class="form-control" type="number" name="taxas" placeholder="Taxas">
+                      <input required class="form-control" type="text" name="tipo" placeholder="Tipo">
+                      <input required type="date" class="form-control" name="data-taxa" placeholder="Data da Taxa">
+                      <input class="form-control" type="text" name="descricao-taxa" placeholder="Descrição da Taxa">
+                      <button class="btn btn-primary" type="submit">Nova taxa</button>
+                    </form>
                   </div>
 
                   <div class="card-block table-border-style">
@@ -489,7 +483,75 @@
                       </table>
                     </div>
                   </div>
-                </div>                
+                </div>
+                
+                
+
+
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Repasse Retido</h5>
+                    <form action="" method="post">
+                      {% csrf_token %}
+                      <p>
+                        filtrar de
+                        <input
+                          type="date"
+                          name="data-inicio"
+                          id="data-inicio"
+                        />
+                        até
+                        <input type="date" name="data-fim" id="data-fim" />
+                        <button class="btn btn-primary">Filtrar</button>
+                        <button
+                          type="button"
+                          name=""
+                          id=""
+                          class="btn btn-danger"
+                        >
+                          Limpar Filtro
+                        </button>
+                      </p>
+                    </form>
+                    <form action="{% url 'home:criar_novo_repasse_retido' %}" method="post" class="w-100">
+                      {% csrf_token %}
+                      <input required class="form-control" type="number" name="id-cliente" placeholder="ID Cliente">
+                      <input required class="form-control" type="number" name="valor" placeholder="valor">
+                      <input required class="form-control" type="text" name="tipo" placeholder="Tipo">
+                      <input required type="date" class="form-control" name="data-repasse-retido" placeholder="Repasse Retido">
+                      <button class="btn btn-warning" type="submit">Novo Repasse Retido</button>
+                    </form>
+                  </div>
+
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-comissoes">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Valor Repasse Retido</th>
+                            <th>Data Repasse Retido</th>
+                            <th>Tipo</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for repasse_retido in repasses_retidos %}
+                            <tr>
+                              <th>{{forloop.counter}}</th>
+                              <th>{{repasse_retido.cliente}}</th>
+                              <th>{{repasse_retido.vlr_rep_retido}}</th>
+                              <th>{{repasse_retido.dt_rep_retido}}</th>
+                              <th>{{repasse_retido.tipo}}</th>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+
               </div>
             </div>
           </div>

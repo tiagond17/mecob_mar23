@@ -15,15 +15,15 @@
             <div class="row align-items-center">
               <div class="col-md-12">
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Bootstrap Basic Tables</h5>
+                  <h5 class="m-b-10">Boletos Avulso</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
                     <a href="/"><i class="feather icon-home"></i></a>
                   </li>
-                  <li class="breadcrumb-item"><a href="#!">Tables</a></li>
+                  <li class="breadcrumb-item"><a href="#!">Tabelas & Formularios</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Basic Tables</a>
+                    <a href="javascript:">Boletos Avulso</a>
                   </li>
                 </ul>
               </div>
@@ -68,15 +68,49 @@
                       <table class="table table-hover" id="table-comissoes">
                         <thead>
                           <tr>
-                            <th>id Vendedor</th>
-                            <th>Nome Vendedor</th>
-                            <th>Recebedor</th>
-                            <th>Parcelas</th>
-                            <th>Pagador</th>
+                            <th>id Contrato</th>
+                            <th>Vendedor</th>
+                            <th>Comprador</th>
+                            <th>Nu Parcela</th>
+                            <th>Valor Parcela</th>
+                            <th>Valor Pagamento</th>
+                            <th>Data Vencimento</th>
+                            <th>Data Credito</th>
+                            <th>Data Processamento</th>
+                            <th>Banco</th>
+                            <th>Parcela primeiro pagto</th>
+                            <th>Total parcelas</th>
+                            <th>Total quitadas</th>
+                            <th>Evento</th>
+                            <th>Produto</th>
+                            <th>Ações</th>
                           </tr>
                         </thead>
-                        <tbody>
-                        </tbody>
+                        <form action=".">
+                          <tbody>
+                            {% for querie in boletos_avulso %}
+                              <tr>
+                                <th><input type="text" value="{{querie.0}}"></th>
+                                <th><input type="text" value="{{querie.1}}"></th>
+                                <th>{{querie.2}}</th>
+                                <th>{{querie.3}}</th>
+                                <th>{{querie.4}}</th>
+                                <th>{{querie.5}}</th>
+                                <th>{{querie.6}}</th>
+                                <th>{{querie.7}}</th>
+                                <th>{{querie.8}}</th>
+                                <th>{{querie.9}}</th>
+                                <th>{{querie.10}}</th>
+                                <th>{{querie.11}}</th>
+                                <th>{{querie.12}}</th>
+                                <th>{{querie.13}}</th>
+                                <th>{{querie.14}}</th>
+                                <th>{{querie.15}}</th>
+                                <th><button type="submit" class="btn btn-sm btn-success">Enviar </button></th>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </form>
                       </table>
                     </div>
                   </div>
@@ -96,6 +130,7 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+<script src="{% static 'assets/js/boletos_avulso.js' %}"></script>
 <script>
   $(document).ready(function () {
     $("#table-comissoes").DataTable();
@@ -104,7 +139,5 @@
       format: "dd/mm/yyyy",
     })
   });
-
-  
 </script>
 {% endblock javascripts %}

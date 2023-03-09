@@ -28,8 +28,11 @@ urlpatterns = [
         views.filtrar_tabela_quinzenal,
         name="filtrar_tabela_quinzenal"
     ),
-    path("upload_planilha", views.upload_planilha, name="upload_planilha"),
-    path("download_planilha", views.download_planilha, name="download_planilha"),
+    path("upload_planilha_quinzenal", views.upload_planilha_quinzenal, name="upload_planilha_quinzenal"),
+    path("download_planilha_quinzenal", views.download_planilha_quinzenal, name="download_planilha_quinzenal"),
+    
+    path("download_planilha_cob", views.download_planilha_cob, name="download_planilha_cob"),
+    path("upload_planilha_cob", views.upload_planilha_cob, name="upload_planilha_cob"),
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
 

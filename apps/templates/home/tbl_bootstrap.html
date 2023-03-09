@@ -126,8 +126,8 @@
                       <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
                     </form>
-                    <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha' %}" role="button">Exportar Consulta .xlsx</a>
-                    <form action="{% url 'home:upload_planilha' %}" method="post" enctype="multipart/form-data">
+                    <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a>
+                    <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">
                       {% csrf_token %}
                       <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
                       <button type="submit" class="btn btn-success">Enviar Planilha</button>

@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 import decimal
 import math
+from . import existing_models
 """
 Copyright (c) 2019 - present AppSeed.us
 """
@@ -220,6 +221,7 @@ class Dado(models.Model):
     class Meta:
         verbose_name = _("Dado")
         verbose_name_plural = _("Dados")
+        db_table = 'dado'
 
     def __str__(self):
         return f'{self.id_contrato}, {self.vendedor}'
@@ -237,3 +239,4 @@ class Quinzenal(models.Model):
         managed = True
         verbose_name = 'Quinzenal'
         verbose_name_plural = 'Quinzenais'
+        
