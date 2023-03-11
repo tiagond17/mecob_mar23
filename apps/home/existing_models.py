@@ -6,7 +6,95 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
+""" class Perfil(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    descricao = models.CharField(unique=True, max_length=45)
+    dt_atualizacao = models.DateTimeField()
+    fixo = models.CharField(max_length=1)
+
+    class Meta:
+        managed= True
+        db_table = 'perfil'
+        
+    def __str__(self):
+        return f'{self.descricao}' """
+
+
+class Perfil(models.Model):
+    descricao = models.CharField(max_length=45)
+    dt_atualizacao = models.DateTimeField()
+    fixo = models.CharField(max_length=1)
+
+    class Meta:
+        verbose_name = _("perfil")
+        verbose_name_plural = _("perfis")
+        db_table = 'perfil'
+        managed = True
+
+    def __str__(self):
+        pass
+
+    def get_absolute_url(self):
+        return reverse("perfil_detail", kwargs={"pk": self.pk})
+
+
+class Status(models.Model):
+    descricao = models.CharField(unique=True, max_length=45)
+
+    class Meta:
+        managed= True
+        db_table = 'status'
+
+
+class Pessoas(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nome = models.CharField(max_length=100, blank=True, null=True)
+    dt_nascimento = models.DateField(blank=True, null=True)
+    cpf_cnpj = models.CharField(max_length=45, blank=True, null=True)
+    rg = models.CharField(max_length=45, blank=True, null=True)
+    foto = models.CharField(max_length=500, blank=True, null=True)
+    email = models.CharField(unique=True, max_length=200)
+    password = models.CharField(max_length=200, blank=True, null=True)
+    saltdb = models.CharField(max_length=100, blank=True, null=True)
+    dt_ativo = models.DateTimeField(blank=True, null=True)
+    apelido = models.CharField(max_length=45, blank=True, null=True)
+    dt_inclusao = models.DateTimeField(blank=True, null=True)
+    rua = models.CharField(max_length=200, blank=True, null=True)
+    numero = models.CharField(max_length=45, blank=True, null=True)
+    complemento = models.CharField(max_length=200, blank=True, null=True)
+    bairro = models.CharField(max_length=100, blank=True, null=True)
+    cidade = models.CharField(max_length=100, blank=True, null=True)
+    estado = models.CharField(max_length=45, blank=True, null=True)
+    cep = models.CharField(max_length=45, blank=True, null=True)
+    celular = models.CharField(max_length=45, blank=True, null=True)
+    site = models.CharField(max_length=100, blank=True, null=True)
+    facebook = models.CharField(max_length=100, blank=True, null=True)
+    twitter = models.CharField(max_length=100, blank=True, null=True)
+    sobre = models.CharField(max_length=1000, blank=True, null=True)
+    status = models.ForeignKey('Status', models.DO_NOTHING, blank=True, null=True)
+    eh_leiloeiro = models.CharField(max_length=45)
+    eh_vendedor = models.CharField(max_length=45)
+    eh_comprador = models.CharField(max_length=45)
+    eh_user = models.CharField(max_length=45)
+    telefone = models.CharField(max_length=45, blank=True, null=True)
+    contato = models.CharField(max_length=200, blank=True, null=True)
+    eh_admin = models.CharField(max_length=200)
+    perfil = models.ForeignKey('Perfil', models.DO_NOTHING, blank=True, null=True)
+    honor_adimp = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    honor_inadimp = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    nacionalidade = models.CharField(max_length=200, blank=True, null=True)
+    supervisor = models.CharField(max_length=1, blank=True, null=True)
+    operador = models.CharField(max_length=1, blank=True, null=True)
+    
+    def __str__(self):
+        return f'{self.nome}'
+
+    class Meta:
+        managed = True
+        db_table = 'pessoas'
 
 class AcessoPessoa(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -18,20 +106,20 @@ class AcessoPessoa(models.Model):
     request = models.TextField(blank=True, null=True)
     nivel_permissao = models.IntegerField(blank=True, null=True)
     cookie = models.TextField(blank=True, null=True)
-    pessoas = models.ForeignKey('Pessoas', models.DO_NOTHING)
+    pessoas = models.ForeignKey(Pessoas, models.DO_NOTHING)
     ehlogin = models.CharField(db_column='ehLogin', max_length=45, blank=True, null=True)  # Field name made lowercase.
     caminho_arquivo = models.CharField(max_length=1000, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'acesso_pessoa'
 
 
 class Alertas(models.Model):
     id = models.BigAutoField(primary_key=True)
     descricao = models.CharField(max_length=1000)
-    pessoas_id_cadastro = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_cadastro', related_name='alertas_pessoas_id_cadastro', blank=True, null=True)
-    pessoas_id_destino = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_destino', related_name='alertas_pessoas_id_destino', blank=True, null=True)
+    pessoas_id_cadastro = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_cadastro', related_name='alertas_pessoas_id_cadastro', blank=True, null=True)
+    pessoas_id_destino = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_destino', related_name='alertas_pessoas_id_destino', blank=True, null=True)
     visualizado = models.CharField(max_length=1, blank=True, null=True)
     data_alerta = models.DateTimeField(blank=True, null=True)
     link = models.CharField(max_length=500, blank=True, null=True)
@@ -40,108 +128,36 @@ class Alertas(models.Model):
     dt_prazo = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'alertas'
 
-
-class Arquivos(models.Model):
+class Eventos(models.Model):
     id = models.BigAutoField(primary_key=True)
-    nm_arq = models.CharField(max_length=100, blank=True, null=True)
-    dt_arq = models.DateTimeField(blank=True, null=True)
-    tp_arq = models.CharField(max_length=45, blank=True, null=True)
-    contratos = models.ForeignKey('Contratos', models.DO_NOTHING, blank=True, null=True, related_name='arquivos_contratos')
-    status = models.CharField(max_length=100, blank=True, null=True)
-    dt_envio_banco = models.DateTimeField(blank=True, null=True)
-    log = models.TextField(blank=True, null=True)
-    dt_processamento = models.DateTimeField(blank=True, null=True)
-    origem = models.CharField(max_length=45, blank=True, null=True)
-    pessoas_id_envio = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_envio', blank=True, null=True, related_name='arquivos_pessoas_id_envio')
-    boletos_avulso = models.ForeignKey('BoletosAvulso', models.DO_NOTHING, blank=True, null=True, related_name='arquivos_boletos_avulso')
-    
-    def __str__(self) -> str:
-        return f'{self.id} - {self.nm_arq}'
-
-    class Meta:
-        managed = False
-        db_table = 'arquivos'
-
-
-class BoletosAvulso(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    dt_boleto = models.DateField()
-    pessoas = models.ForeignKey('Pessoas', models.DO_NOTHING, related_name='boletos_avulso_pessoas', blank=True, null=True)
-    pessoas_id_inclusao = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_inclusao', related_name='boletos_avulso_pessoas_id_inclusao', blank=True, null=True)
-    contratos = models.ForeignKey('Contratos', models.DO_NOTHING, blank=True, null=True)
-    descricao = models.CharField(max_length=1000, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'boletos_avulso'
-
-
-class ContratoLote(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    contratos = models.ForeignKey('Contratos', models.DO_NOTHING)
-    lote = models.ForeignKey('Lotes', models.DO_NOTHING)
-    vl_lote = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'contrato_lote'
-
-
-class ContratoParcelas(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    contratos = models.ForeignKey('Contratos', models.DO_NOTHING, blank=True, null=True, related_name='parcelas')
-    nu_parcela = models.IntegerField(blank=True, null=True)
-    dt_vencimento = models.DateField(blank=True, null=True)
-    dt_pagto = models.DateField(blank=True, null=True)
-    vl_parcela = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_correcao_monetaria = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_juros = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_pagto = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_juros_pagto = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_honorarios = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_taxa = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_multa = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vl_corrigido = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    liquidada_no_cadastro = models.CharField(max_length=45, blank=True, null=True)
-    simulada = models.CharField(max_length=45, blank=True, null=True)
-    dt_vencimento_original = models.DateField(blank=True, null=True)
-    arquivos_id_remessa = models.ForeignKey(Arquivos, models.DO_NOTHING,related_name='arquivos_id_remessa' , db_column='arquivos_id_remessa', blank=True, null=True)
-    nu_linha_remessa = models.IntegerField(blank=True, null=True)
-    arquivos_id_retorno = models.ForeignKey(Arquivos, models.DO_NOTHING,related_name='arquivos_id_retorno' , db_column='arquivos_id_retorno', blank=True, null=True)
-    nu_linha_retorno = models.CharField(max_length=45, blank=True, null=True)
-    dt_credito = models.DateField(blank=True, null=True)
-    dt_processo_pagto = models.DateTimeField(blank=True, null=True)
-    teds = models.ForeignKey('Teds', models.DO_NOTHING, blank=True, null=True)
-    tratar_ted = models.IntegerField(blank=True, null=True)
-    pessoas_id_atualizacao = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_atualizacao', blank=True, null=True)
-    fl_negativada = models.CharField(max_length=45, blank=True, null=True)
-    motivo_zerado = models.CharField(max_length=150, blank=True, null=True)
-    observacao_zerado = models.CharField(max_length=2000, blank=True, null=True)
-    fl_acao_judicial = models.CharField(max_length=45, blank=True, null=True)
-    boletos_avulso = models.ForeignKey(BoletosAvulso, models.DO_NOTHING, blank=True, null=True)
-    dt_atualizacao_monetaria = models.DateField(blank=True, null=True)
+    nome = models.CharField(max_length=500, db_collation='utf8mb3_general_ci', blank=True, null=True)
+    leiloeiro = models.ForeignKey('Pessoas', models.DO_NOTHING)
+    dt_evento = models.DateField()
+    tipo = models.CharField(max_length=200, db_collation='utf8mb3_general_ci')
     
     def __str__(self):
-        return f'n°: {self.nu_parcela}, parcela: {self.vl_parcela}, vencimento: {self.dt_vencimento}'
+        return f'nome: {self.nome}, leiloeiro: {self.leiloeiro}'
+
 
     class Meta:
-        managed = False
-        db_table = 'contrato_parcelas'
+        managed= True
+        db_table = 'eventos'
+
 
 class Contratos(models.Model):
     descricao = models.CharField(max_length=500, blank=True, null=True)
     dt_contrato = models.DateField(blank=True, null=True)
     vl_contrato = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    vendedor = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=True, related_name='contratos_como_vendedor')
-    comprador = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=True, related_name='contratos_como_comprador')
+    vendedor = models.ForeignKey(Pessoas, models.DO_NOTHING, blank=True, null=True, related_name='contratos_como_vendedor')
+    comprador = models.ForeignKey(Pessoas, models.DO_NOTHING, blank=True, null=True, related_name='contratos_como_comprador')
     nu_parcelas = models.IntegerField(blank=True, null=True)
     vl_entrada = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    eventos = models.ForeignKey('Eventos', models.DO_NOTHING)
+    eventos = models.ForeignKey(Eventos, models.DO_NOTHING)
     tp_contrato = models.CharField(max_length=50, blank=True, null=True)
-    pessoas_id_inclusao = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_inclusao')
+    pessoas_id_inclusao = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_inclusao')
     dt_inclusao = models.DateTimeField(blank=True, null=True)
     honor_adimp = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     honor_inadimp = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
@@ -177,10 +193,135 @@ class Contratos(models.Model):
         return f'vendedor: {self.vendedor}, comprador: {self.comprador}, n°s parcelas: {self.parcelas.count()}'
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'contratos'
 
-        
+class BoletosAvulso(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    dt_boleto = models.DateField()
+    pessoas = models.ForeignKey('Pessoas', models.DO_NOTHING, related_name='boletos_avulso_pessoas', blank=True, null=True)
+    pessoas_id_inclusao = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_inclusao', related_name='boletos_avulso_pessoas_id_inclusao', blank=True, null=True)
+    contratos = models.ForeignKey('Contratos', models.DO_NOTHING, blank=True, null=True)
+    descricao = models.CharField(max_length=1000, blank=True, null=True)
+
+    class Meta:
+        managed= True
+        db_table = 'boletos_avulso'
+
+
+class Arquivos(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nm_arq = models.CharField(max_length=100, blank=True, null=True)
+    dt_arq = models.DateTimeField(blank=True, null=True)
+    tp_arq = models.CharField(max_length=45, blank=True, null=True)
+    contratos = models.ForeignKey(Contratos, models.DO_NOTHING, blank=True, null=True, related_name='arquivos_contratos')
+    status = models.CharField(max_length=100, blank=True, null=True)
+    dt_envio_banco = models.DateTimeField(blank=True, null=True)
+    log = models.TextField(blank=True, null=True)
+    dt_processamento = models.DateTimeField(blank=True, null=True)
+    origem = models.CharField(max_length=45, blank=True, null=True)
+    pessoas_id_envio = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_envio', blank=True, null=True, related_name='arquivos_pessoas_id_envio')
+    boletos_avulso = models.ForeignKey(BoletosAvulso, models.DO_NOTHING, blank=True, null=True, related_name='arquivos_boletos_avulso')
+    
+    def __str__(self) -> str:
+        return f'{self.id} - {self.nm_arq}'
+
+    class Meta:
+        managed= True
+        db_table = 'arquivos'
+
+
+class Lotes(models.Model):
+    nome = models.CharField(max_length=500)
+    num_registro = models.CharField(max_length=100, blank=True, null=True)
+    dt_nascimento = models.DateField(blank=True, null=True)
+    tipo = models.CharField(max_length=500)
+
+    class Meta:
+        managed= True
+        db_table = 'lotes'
+
+
+class ContratoLote(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    contratos = models.ForeignKey(Contratos, models.DO_NOTHING)
+    lote = models.ForeignKey(Lotes, models.DO_NOTHING)
+    vl_lote = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
+    class Meta:
+        managed= True
+        db_table = 'contrato_lote'
+
+class Teds(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    pessoas_id_vendedor = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_vendedor', related_name='teds_vendedor')
+    pessoas_id_inclusao = models.ForeignKey('Pessoas', models.DO_NOTHING, db_column='pessoas_id_inclusao', related_name='teds_inclusao')
+    dt_inclusao = models.DateTimeField(blank=True, null=True)
+    dt_ted = models.DateField(blank=True, null=True)
+    vl_ted = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    status_ted = models.IntegerField(blank=True, null=True)
+    banco = models.IntegerField(blank=True, null=True)
+    agencia = models.IntegerField(blank=True, null=True)
+    dv_agencia = models.CharField(max_length=45, blank=True, null=True)
+    conta = models.IntegerField(blank=True, null=True)
+    dv_conta = models.CharField(max_length=45, blank=True, null=True)
+    arquivos_id_remessa = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_remessa', blank=True, null=True, related_name='teds_arquivos_remessa')
+    nu_linha_remessa = models.IntegerField(blank=True, null=True)
+    arquivos_id_retorno_previa = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno_previa', blank=True, null=True, related_name='teds_arquivos_retorno_previa')
+    nu_linha_retorno_previa = models.IntegerField(blank=True, null=True)
+    arquivos_id_retorno_processamento = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno_processamento', blank=True, null=True, related_name='teds_arquivos_retorno_processamento')
+    nu_linha_retorno_processamento = models.IntegerField(blank=True, null=True)
+    arquivos_id_retorno_consolidado = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno_consolidado', blank=True, null=True, related_name='teds_arquivos_retorno_consolidado')
+    nu_linha_retorno_consolidado = models.IntegerField(blank=True, null=True)
+    del_domc_bancario = models.IntegerField(blank=True, null=True)
+    log_zerar = models.CharField(max_length=500, blank=True, null=True)
+
+    class Meta:
+        managed= True
+        db_table = 'teds'
+
+
+class ContratoParcelas(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    contratos = models.ForeignKey(Contratos, models.DO_NOTHING, blank=True, null=True, related_name='parcelas')
+    nu_parcela = models.IntegerField(blank=True, null=True)
+    dt_vencimento = models.DateField(blank=True, null=True)
+    dt_pagto = models.DateField(blank=True, null=True)
+    vl_parcela = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_correcao_monetaria = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_juros = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_pagto = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_juros_pagto = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_honorarios = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_taxa = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_multa = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    vl_corrigido = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    liquidada_no_cadastro = models.CharField(max_length=45, blank=True, null=True)
+    simulada = models.CharField(max_length=45, blank=True, null=True)
+    dt_vencimento_original = models.DateField(blank=True, null=True)
+    arquivos_id_remessa = models.ForeignKey(Arquivos, models.DO_NOTHING,related_name='arquivos_id_remessa' , db_column='arquivos_id_remessa', blank=True, null=True)
+    nu_linha_remessa = models.IntegerField(blank=True, null=True)
+    arquivos_id_retorno = models.ForeignKey(Arquivos, models.DO_NOTHING,related_name='arquivos_id_retorno' , db_column='arquivos_id_retorno', blank=True, null=True)
+    nu_linha_retorno = models.CharField(max_length=45, blank=True, null=True)
+    dt_credito = models.DateField(blank=True, null=True)
+    dt_processo_pagto = models.DateTimeField(blank=True, null=True)
+    teds = models.ForeignKey(Teds, models.DO_NOTHING, blank=True, null=True)
+    tratar_ted = models.IntegerField(blank=True, null=True)
+    pessoas_id_atualizacao = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_atualizacao', blank=True, null=True)
+    fl_negativada = models.CharField(max_length=45, blank=True, null=True)
+    motivo_zerado = models.CharField(max_length=150, blank=True, null=True)
+    observacao_zerado = models.CharField(max_length=2000, blank=True, null=True)
+    fl_acao_judicial = models.CharField(max_length=45, blank=True, null=True)
+    boletos_avulso = models.ForeignKey(BoletosAvulso, models.DO_NOTHING, blank=True, null=True)
+    dt_atualizacao_monetaria = models.DateField(blank=True, null=True)
+    
+    def __str__(self):
+        return f'n°: {self.nu_parcela}, parcela: {self.vl_parcela}, vencimento: {self.dt_vencimento}'
+
+    class Meta:
+        managed= True
+        db_table = 'contrato_parcelas'
+
 
 
 class DadosArquivoRetorno(models.Model):
@@ -203,7 +344,7 @@ class DadosArquivoRetorno(models.Model):
         return f'valor pago: {self.vl_pago}, data de pagamento: {self.dt_credito}'
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'dados_arquivo_retorno'
 
 
@@ -214,31 +355,15 @@ class Documentos(models.Model):
     contratos = models.ForeignKey(Contratos, models.DO_NOTHING)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'documentos'
-
-
-class Eventos(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    nome = models.CharField(max_length=500, db_collation='utf8mb3_general_ci', blank=True, null=True)
-    leiloeiro = models.ForeignKey('Pessoas', models.DO_NOTHING)
-    dt_evento = models.DateField()
-    tipo = models.CharField(max_length=200, db_collation='utf8mb3_general_ci')
-    
-    def __str__(self):
-        return f'nome: {self.nome}, leiloeiro: {self.leiloeiro}'
-
-
-    class Meta:
-        managed = False
-        db_table = 'eventos'
 
 
 class Haras(models.Model):
     nome = models.CharField(max_length=500)
     contato = models.CharField(max_length=500, blank=True, null=True)
     telefone = models.CharField(max_length=50, blank=True, null=True)
-    proprietario = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=True)
+    proprietario = models.ForeignKey(Pessoas, models.DO_NOTHING, blank=True, null=True)
     proprietario_nome = models.CharField(max_length=500, blank=True, null=True)
     proprietario_doc = models.CharField(max_length=500, blank=True, null=True)
     rua = models.CharField(max_length=500, blank=True, null=True)
@@ -250,9 +375,8 @@ class Haras(models.Model):
     cep = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'haras'
-
 
 
 class IndiceCgj(models.Model):
@@ -261,31 +385,22 @@ class IndiceCgj(models.Model):
     vl_indice = models.DecimalField(max_digits=12, decimal_places=6)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'indice_cgj'
 
 
 class LancamentosTed(models.Model):
     id = models.BigAutoField(primary_key=True)
-    teds = models.ForeignKey('Teds', models.DO_NOTHING)
+    teds = models.ForeignKey(Teds, models.DO_NOTHING)
     valor = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     tipo = models.CharField(max_length=200, blank=True, null=True)
     obs = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'lancamentos_ted'
 
 
-class Lotes(models.Model):
-    nome = models.CharField(max_length=500)
-    num_registro = models.CharField(max_length=100, blank=True, null=True)
-    dt_nascimento = models.DateField(blank=True, null=True)
-    tipo = models.CharField(max_length=500)
-
-    class Meta:
-        managed = False
-        db_table = 'lotes'
 
 
 class Modulo(models.Model):
@@ -295,7 +410,7 @@ class Modulo(models.Model):
     descricao = models.CharField(max_length=2000, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'modulo'
 
 
@@ -303,7 +418,7 @@ class Ocorrencias(models.Model):
     id = models.BigAutoField(primary_key=True)
     status = models.CharField(max_length=500, blank=True, null=True)
     mensagem = models.TextField(blank=True, null=True)
-    pessoas = models.ForeignKey('Pessoas', models.DO_NOTHING)
+    pessoas = models.ForeignKey(Pessoas, models.DO_NOTHING)
     contratos = models.ForeignKey(Contratos, models.DO_NOTHING)
     data_ocorrencia = models.DateTimeField(blank=True, null=True)
     contratos_id_original = models.IntegerField(blank=True, null=True)
@@ -311,19 +426,11 @@ class Ocorrencias(models.Model):
     promessa_pagamento = models.DateField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'ocorrencias'
 
 
-class Perfil(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    descricao = models.CharField(unique=True, max_length=45)
-    dt_atualizacao = models.DateTimeField()
-    fixo = models.CharField(max_length=1)
 
-    class Meta:
-        managed = False
-        db_table = 'perfil'
 
 
 class PerfilModulo(models.Model):
@@ -336,56 +443,8 @@ class PerfilModulo(models.Model):
     conceder = models.CharField(max_length=45, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'perfil_modulo'
-
-
-class Pessoas(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    nome = models.CharField(max_length=100, blank=True, null=True)
-    dt_nascimento = models.DateField(blank=True, null=True)
-    cpf_cnpj = models.CharField(max_length=45, blank=True, null=True)
-    rg = models.CharField(max_length=45, blank=True, null=True)
-    foto = models.CharField(max_length=500, blank=True, null=True)
-    email = models.CharField(unique=True, max_length=200)
-    password = models.CharField(max_length=200, blank=True, null=True)
-    saltdb = models.CharField(max_length=100, blank=True, null=True)
-    dt_ativo = models.DateTimeField(blank=True, null=True)
-    apelido = models.CharField(max_length=45, blank=True, null=True)
-    dt_inclusao = models.DateTimeField(blank=True, null=True)
-    rua = models.CharField(max_length=200, blank=True, null=True)
-    numero = models.CharField(max_length=45, blank=True, null=True)
-    complemento = models.CharField(max_length=200, blank=True, null=True)
-    bairro = models.CharField(max_length=100, blank=True, null=True)
-    cidade = models.CharField(max_length=100, blank=True, null=True)
-    estado = models.CharField(max_length=45, blank=True, null=True)
-    cep = models.CharField(max_length=45, blank=True, null=True)
-    celular = models.CharField(max_length=45, blank=True, null=True)
-    site = models.CharField(max_length=100, blank=True, null=True)
-    facebook = models.CharField(max_length=100, blank=True, null=True)
-    twitter = models.CharField(max_length=100, blank=True, null=True)
-    sobre = models.CharField(max_length=1000, blank=True, null=True)
-    status = models.ForeignKey('Status', models.DO_NOTHING)
-    eh_leiloeiro = models.CharField(max_length=45)
-    eh_vendedor = models.CharField(max_length=45)
-    eh_comprador = models.CharField(max_length=45)
-    eh_user = models.CharField(max_length=45)
-    telefone = models.CharField(max_length=45, blank=True, null=True)
-    contato = models.CharField(max_length=200, blank=True, null=True)
-    eh_admin = models.CharField(max_length=200)
-    perfil = models.ForeignKey(Perfil, models.DO_NOTHING, blank=True, null=True)
-    honor_adimp = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    honor_inadimp = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    nacionalidade = models.CharField(max_length=200, blank=True, null=True)
-    supervisor = models.CharField(max_length=1, blank=True, null=True)
-    operador = models.CharField(max_length=1, blank=True, null=True)
-    
-    def __str__(self):
-        return f'{self.nome}'
-
-    class Meta:
-        managed = False
-        db_table = 'pessoas'
 
 
 class Protocolos(models.Model):
@@ -419,7 +478,7 @@ class Protocolos(models.Model):
     ct_verifica = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'protocolos'
 
 
@@ -432,7 +491,7 @@ class ProtocolosEventos(models.Model):
     protocolos = models.ForeignKey(Protocolos, models.DO_NOTHING)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'protocolos_eventos'
         unique_together = (('id', 'protocolos'),)
 
@@ -452,7 +511,7 @@ class ProtocolosServicos(models.Model):
     enable = models.PositiveIntegerField()
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'protocolos_servicos'
 
 
@@ -464,7 +523,7 @@ class ProtocolosSetor(models.Model):
     protocolos = models.ForeignKey(Protocolos, models.DO_NOTHING)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'protocolos_setor'
         unique_together = (('id', 'protocolos'),)
 
@@ -478,7 +537,7 @@ class RodizioClientes(models.Model):
     ativo = models.CharField(max_length=1, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'rodizio_clientes'
 
 
@@ -493,7 +552,7 @@ class SendMail(models.Model):
     prioridade = models.IntegerField()
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'send_mail'
 
 
@@ -504,42 +563,5 @@ class SendMailDestinatarios(models.Model):
     send_mail = models.ForeignKey(SendMail, models.DO_NOTHING)
 
     class Meta:
-        managed = False
+        managed= True
         db_table = 'send_mail_destinatarios'
-
-
-class Status(models.Model):
-    descricao = models.CharField(unique=True, max_length=45)
-
-    class Meta:
-        managed = False
-        db_table = 'status'
-
-
-class Teds(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    pessoas_id_vendedor = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_vendedor', related_name='teds_vendedor')
-    pessoas_id_inclusao = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_inclusao', related_name='teds_inclusao')
-    dt_inclusao = models.DateTimeField(blank=True, null=True)
-    dt_ted = models.DateField(blank=True, null=True)
-    vl_ted = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    status_ted = models.IntegerField(blank=True, null=True)
-    banco = models.IntegerField(blank=True, null=True)
-    agencia = models.IntegerField(blank=True, null=True)
-    dv_agencia = models.CharField(max_length=45, blank=True, null=True)
-    conta = models.IntegerField(blank=True, null=True)
-    dv_conta = models.CharField(max_length=45, blank=True, null=True)
-    arquivos_id_remessa = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_remessa', blank=True, null=True, related_name='teds_arquivos_remessa')
-    nu_linha_remessa = models.IntegerField(blank=True, null=True)
-    arquivos_id_retorno_previa = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno_previa', blank=True, null=True, related_name='teds_arquivos_retorno_previa')
-    nu_linha_retorno_previa = models.IntegerField(blank=True, null=True)
-    arquivos_id_retorno_processamento = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno_processamento', blank=True, null=True, related_name='teds_arquivos_retorno_processamento')
-    nu_linha_retorno_processamento = models.IntegerField(blank=True, null=True)
-    arquivos_id_retorno_consolidado = models.ForeignKey(Arquivos, models.DO_NOTHING, db_column='arquivos_id_retorno_consolidado', blank=True, null=True, related_name='teds_arquivos_retorno_consolidado')
-    nu_linha_retorno_consolidado = models.IntegerField(blank=True, null=True)
-    del_domc_bancario = models.IntegerField(blank=True, null=True)
-    log_zerar = models.CharField(max_length=500, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'teds'

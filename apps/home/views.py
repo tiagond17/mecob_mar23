@@ -19,9 +19,9 @@ from decimal import Decimal
 from openpyxl.utils import get_column_letter
 
 
-from .existing_models import Contratos, ContratoParcelas, Pessoas
-from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
+#from .existing_models import Contratos, ContratoParcelas, Pessoas
+#from .forms import CAD_ClienteForm, Calculo_RepasseForm
+#from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido#, Pessoas
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -197,7 +197,6 @@ c.vendedor_id, p.nome
                 context['sql'] = cursor.fetchall()
                 context['qtd_cols'] = [n for n in range(0, len(context.get('sql')[0]))]
                 context['mes_consultado'] = "{}, consultado do dia {} ate {}".format(date(month=9, year=2022, day=1).month, date(year=2022,month=9, day=1), date(year=2022,month=9, day=15))
-            #context['quinzena_result'] = Calculo_Repasse.objects.select_related('id_vendedor').filter()
         
         elif load_template == 'tbl_boletos_avulso.html':
             if request.method == 'POST':
@@ -239,7 +238,8 @@ c.vendedor_id, p.nome
             pass
 
         elif load_template == 'cad_clientes_table_bootstrap.html':
-            context['cad_clientes'] = CadCliente.objects.all()
+            #context['cad_clientes'] = CadCliente.objects.all()
+            pass
             
         elif load_template == 'tbl_julia_bootstrap.html':
             if request.method == 'POST':
@@ -274,7 +274,7 @@ c.vendedor_id, p.nome
                         group by contratos.vendedor_id
                     """)
                     context['repasses'] = cursor.fetchall()
-                    context['repasses_geral'] = sum([float(calculo_repase.repasses) for calculo_repase in Calculo_Repasse.objects.filter(dt_credito=data, banco=bancos)])
+                    #context['repasses_geral'] = sum([float(calculo_repase.repasses) for calculo_repase in Calculo_Repasse.objects.filter(dt_credito=data, banco=bancos)])
                 pass
             pass
         
@@ -288,7 +288,6 @@ c.vendedor_id, p.nome
                 context['sql'] = preencher_tabela_cob(
                     data_inicio=data_inicio, data_fim=data_fim)
                 request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
-            context['form'] = Calculo_RepasseForm()
             #!context['cad_clientes'] = CadCliente.objects.all()
 
         elif load_template == 'tbl_credito_cessao.html':
@@ -405,8 +404,8 @@ c.vendedor_id, p.nome
                     GROUP BY p.id, p.nome
                     """)
                 context['debitos'] = cursor.fetchall()
-            context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-01-01', '2023-03-02'), taxas__gt=0)
-            context['repasse_retido'] = RepasseRetido.objects.filter(dt_rep_retido__gt="2022-03-01")
+            #context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-01-01', '2023-03-02'), taxas__gt=0)
+            #context['repasse_retido'] = RepasseRetido.objects.filter(dt_rep_retido__gt="2022-03-01")
 
             
         elif load_template == 'tbl_mensal_bootstrap.html':
@@ -463,7 +462,7 @@ c.vendedor_id, p.nome
                     """
                 )
                 context['sql'] = cursor.fetchall()
-                context['repasses_retidos'] = RepasseRetido.objects.filter(dt_rep_retido__gte="2022-01-01")
+                #context['repasses_retidos'] = RepasseRetido.objects.filter(dt_rep_retido__gte="2022-01-01")
                 
         elif load_template == 'tbl_debito_cessao.html':
             if request.method == 'POST':
@@ -546,18 +545,18 @@ def criar_novo_cadastro_de_credito_e_debito(request, *args, **kwargs):
         descricao = request.POST.get('descricao')
         pagador = Pessoas.objects.get(id=pagador)
         credor = Pessoas.objects.get(id=credor)
-        Debito.objects.create(
+        """ Debito.objects.create(
             cliente = pagador,
             vl_debito = valor,
             dt_debitado = data_credito,
             descricao = descricao,
-        )
-        Credito.objects.create(
+        ) """
+        """ Credito.objects.create(
             cliente = credor,
             vl_credito = valor,
             dt_creditado = data_credito,
             descricao = descricao,
-        )
+        ) """
         return HttpResponseRedirect('/tbl_credito_cessao.html')
     return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
 
@@ -573,13 +572,13 @@ def criar_nova_taxa(request):
         tipo = request.POST.get('tipo')
         descricao_taxa = request.POST.get('descricao-taxa')
         data_taxa = request.POST.get('data-taxa')
-        Taxa.objects.create(
+        """ Taxa.objects.create(
             cliente = cliente,
             tipo = tipo,
             descricao = descricao_taxa,
             taxas = taxas,
             dt_taxa = data_taxa
-        )
+        ) """
         return HttpResponseRedirect('/tbl_credito_cessao.html')
     return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
 
@@ -589,12 +588,12 @@ def criar_novo_repasse_retido(request, *args, **kwargs):
         valor = request.POST.get('valor')
         tipo = request.POST.get('tipo')
         data_repasse_retido = request.POST.get('data-repasse-retido')
-        RepasseRetido.objects.create(
+        """ RepasseRetido.objects.create(
             cliente=Pessoas.objects.get(id=id_cliente),
             vlr_rep_retido=valor,
             tipo = tipo,
             dt_rep_retido = data_repasse_retido
-        )
+        ) """
         return HttpResponseRedirect('/tbl_credito_cessao.html')
     return HttpResponse(" <h1>GET</h1> ")
 

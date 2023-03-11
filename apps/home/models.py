@@ -6,6 +6,8 @@ from django.utils.translation import gettext_lazy as _
 import decimal
 import math
 from . import existing_models
+#from .existing_models import Pessoas
+
 """
 Copyright (c) 2019 - present AppSeed.us
 """
@@ -13,6 +15,7 @@ Copyright (c) 2019 - present AppSeed.us
 """A tabela CadCliente é utilizada para cadastrar novos clientes no sistema
 ou seja, sempre que uma pessoa (que esteja no banco de dados cadastrado na tabela Pessoa)
 realizar uma venda ela é adicionada na tabela CadCliente"""
+
 class CadCliente(models.Model):
     vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
     nome = models.CharField(_(""), max_length=128, blank=True, null=True)
@@ -221,10 +224,10 @@ class Dado(models.Model):
     class Meta:
         verbose_name = _("Dado")
         verbose_name_plural = _("Dados")
+        db_table = 'dado'
 
     def __str__(self):
         return f'{self.id_contrato}, {self.vendedor}'
 
     def get_absolute_url(self):
         return reverse("Dado_detail", kwargs={"pk": self.pk})
-    
