@@ -243,38 +243,44 @@ c.vendedor_id, p.nome
             
         elif load_template == 'tbl_julia_bootstrap.html':
             if request.method == 'POST':
+                bancos = request.POST.get('bancos')
+                data = request.POST.get('data')
+                with connection.cursor() as cursor:
+                    cursor.execute(f"""
+                                select SUM(vl_pago) as valor_pago,
+                                sum(me) as honorarios
+                                from calculo_repasse
+                                where dt_credito = '{data}' and banco='{str(bancos).upper()}';
+                            """)
+                    context['valores_totais'] = cursor.fetchall()
+                    cursor.execute(f"""
+                        select distinct comissao as comissionista,
+                        sum(op) as comissoes
+                        from calculo_repasse
+                        where dt_credito = '{data}' and banco='{str(bancos).upper()}' and not isnull(comissao)
+                        group by comissao;
+                        """)
+                    context['comissoes'] = cursor.fetchall()
+                    cursor.execute(f"""
+                        select id_contrato_id,
+                        pessoas.nome,
+                        CASE WHEN id_contrato_id > 12460 OR ISNULL(id_contrato_id)
+                        THEN 'UNICRED' ELSE 'BRADESCO' END as banco,
+                        sum(repasses)
+                        from calculo_repasse
+                        left join contratos on contratos.id=id_contrato_id
+                        left join pessoas on pessoas.id = contratos.vendedor_id
+                        where dt_credito = '{data}'
+                        group by contratos.vendedor_id
+                    """)
+                    context['repasses'] = cursor.fetchall()
+                    context['repasses_geral'] = sum([float(calculo_repase.repasses) for calculo_repase in Calculo_Repasse.objects.filter(dt_credito=data, banco=bancos)])
                 pass
             pass
         
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                            select SUM(vl_pago) as valor_pago, sum(me) as honorarios from calculo_repasse where dt_credito = "2022-09-26"
-                        """)
-                valores_totais_bradesco = cursor.fetchall()
-                cursor.execute("""
-                    select distinct comissao as comissionista, 
-                    sum(vl_pago*0.05) as comissoes 
-                    from calculo_repasse
-                    where dt_credito = "2022-09-26" and comissao != " -"  and banco="UNICRED"
-                    group by comissao;
-                    """)
-                comissoes = cursor.fetchall()
-                cursor.execute("""
-                    select id_contrato_id,
-                    pessoas.nome,
-                    CASE WHEN id_contrato_id > 12460 OR ISNULL(id_contrato_id) THEN 'UNICRED' ELSE 'BRADESCO' END as banco,
-                    sum(vl_pago)
-                    from calculo_repasse
-                    left join contratos on contratos.id=id_contrato_id
-                    left join pessoas on pessoas.id = contratos.vendedor_id
-                    where dt_credito = "2022-09-26"
-                    group by contratos.vendedor_id
-                """)
-                repasses = cursor.fetchall()
+            
 
-            context['comissoes'] = comissoes
-            context['valores_totais_bradesco'] = valores_totais_bradesco
-            context['repasses'] = repasses
+            
         elif load_template == 'form_elements.html':
             if request.method == "POST":
                 data_inicio = request.POST.get('data_inicio')  # 2022-08-01:str
@@ -292,7 +298,10 @@ c.vendedor_id, p.nome
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT distinct vendedor_id, nome , nu_parcelas, dt_contrato FROM contratos
+                    SELECT distinct vendedor_id,
+                    nome, 
+                    nu_parcelas, 
+                    dt_contrato FROM contratos
                     join pessoas
                     where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
                     and repasse = 'S' and pessoas.id=vendedor_id
@@ -651,7 +660,7 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             )
             as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
             WHERE
-            cr.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}'
+            cr.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}' and c.repasse = 'S'
             GROUP BY
             c.vendedor_id, p.nome
         """
@@ -771,6 +780,22 @@ def download_planilha_cob(request, *args, **kwargs):
 def upload_planilha_cob(request, *args, **kwargs):
     if request.method == 'POST':
         planilha = request.FILES.get('docpicker')
+        #verificar se o arquivo é do tipo xlsx
+        if planilha.name.endswith('.xlsx'):
+            #arquivo esta recebendo com sucesso, azer os devidos tratamentos
+            wb = openpyxl.load_workbook(planilha)
+            #nesse arquivo de planilha, a primeira aba é a que contem os dados, e so existe uma aba
+            sheet = wb.worksheets[0]
+            linha = 0
+            for row in sheet.iter_rows(values_only=True):
+                if linha < 1:
+                    linha += 1
+                    continue
+                linha += 1
+                if (row[0] and row[1] and row[2]) == None:
+                    break
+            
+            
         #arquivo esta recebendo com sucesso, azer os devidos tratamentos
         return HttpResponse(planilha)
     return HttpResponseRedirect('/form_elements.html')

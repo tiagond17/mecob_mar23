@@ -84,20 +84,17 @@
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
-                        <input type="date" name="data-inicio" id="data-inicio">
-                         até 
-                        <input type="date" name="data-fim" id="data-fim"> 
-                        <label for="">banco :</label>
-                        <select name="" id="">
-                          <option value="bradesco">bradesco</option>
-                          <option value="unicred">unicred</option>
+                        <input required type="date" name="data" id="data">
+                        <label for="bancos">banco :</label>
+                        <select name="bancos" id="bancos">
+                          <option value="bradesco" name="banco">Bradesco</option>
+                          <option value="unicred" name="banco">Unicred</option>
                         </select>
                         <button class="btn btn-primary">Filtrar</button> 
                         <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
                       </p>
                     </form>
-                      <p>Valor pago: R${{valores_totais_bradesco.0.0|intcomma}} | Honorarios: R${{valores_totais_bradesco.0.1|intcomma}} </p>
-                      <p>Honorarios: R${{valores_totais_bradesco.0.1|intcomma}}</p>
+                      <h6>Valor pago: R${{valores_totais.0.0|intcomma}} | Honorarios: R${{valores_totais.0.1|intcomma}} <h3/>
                   </div>
                   <div class="card-block table-border-style">
                     <h5>Comissionistas do Mês</h5>
@@ -123,12 +120,12 @@
                     <br>
                     <h5>Repasses</h5>
                     <div class="table-responsive">
-                      <table class="table table-hover" id="table-julia">
+                      <table class="table table-hover" id="table-repasse">
                         <thead>
                           <tr>
                             <th>id Contrato</th>
                             <th>Nome</th>
-                            <th>banco</th>
+                            <th>Banco</th>
                             <th>Valor Pago</th>
                           </tr>
                         </thead>
@@ -144,6 +141,7 @@
                         </tbody>
                       </table>
                     </div>
+                    <h5>Repasses Geral: R$ {{repasses_geral|intcomma}}</h5>
                   </div>
                 </div>
               </div>
@@ -165,6 +163,7 @@
 <script>
   $(document).ready(function(){
     $('#table-julia').DataTable();
+    $('#table-repasse').DataTable();
   })
 </script>
 {% endblock javascripts %}

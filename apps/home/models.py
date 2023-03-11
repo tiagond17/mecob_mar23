@@ -221,22 +221,10 @@ class Dado(models.Model):
     class Meta:
         verbose_name = _("Dado")
         verbose_name_plural = _("Dados")
-        db_table = 'dado'
 
     def __str__(self):
         return f'{self.id_contrato}, {self.vendedor}'
 
     def get_absolute_url(self):
         return reverse("Dado_detail", kwargs={"pk": self.pk})
-
-
-class Quinzenal(models.Model):
-    def __str__(self):
-        pass
-
-    class Meta:
-        db_table = 'quinzenal'
-        managed = True
-        verbose_name = 'Quinzenal'
-        verbose_name_plural = 'Quinzenais'
-        
+    

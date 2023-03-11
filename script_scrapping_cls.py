@@ -1,3 +1,6 @@
+import openpyxl
+wb = openpyxl.load_workbook('cavalos_09_2022_backup.xlsx')
+cob = wb['COB (2)']
 def carregar_modeL_calcular_repasse():
    linha = 0
    for row in cob_2.iter_rows(values_only=True):
