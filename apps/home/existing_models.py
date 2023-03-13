@@ -22,9 +22,9 @@ from django.utils.translation import gettext_lazy as _
     def __str__(self):
         return f'{self.descricao}' """
 
-
 class Perfil(models.Model):
-    descricao = models.CharField(max_length=45)
+    id = models.BigAutoField(primary_key=True)
+    descricao = models.CharField(unique=True, max_length=45)
     dt_atualizacao = models.DateTimeField()
     fixo = models.CharField(max_length=1)
 
@@ -32,7 +32,7 @@ class Perfil(models.Model):
         verbose_name = _("perfil")
         verbose_name_plural = _("perfis")
         db_table = 'perfil'
-        managed = True
+        managed = False
 
     def __str__(self):
         pass

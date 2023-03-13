@@ -1,9 +1,5 @@
-{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %}
-
-{% load utils %}
-{% load humanize %}
-
-{% load static %}
+{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %} 
+{% load utils %} {% load humanize %} {% load static %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} {% block content %}
@@ -19,15 +15,17 @@
             <div class="row align-items-center">
               <div class="col-md-12">
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Bootstrap Basic Tables</h5>
+                  <h5 class="m-b-10">Comissões Vendedor</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
                     <a href="/"><i class="feather icon-home"></i></a>
                   </li>
-                  <li class="breadcrumb-item"><a href="#!">Tables</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Basic Tables</a>
+                    <a href="#!">Tabelas & Formularios</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Comissões Vendedor</a>
                   </li>
                 </ul>
               </div>
@@ -39,24 +37,33 @@
           <div class="page-wrapper">
             <!-- [ Main Content ] start -->
             <div class="row">
-              <h1>Comissoes</h1>
               <!-- [ Hover-table ] start -->
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
-                    <h5>Hover Table</h5>
+                    <h5>Comissoes Vendedor</h5>
                     <form action="" method="post">
                       {% csrf_token %}
-                      <p>filtrar de 
-                        <input type="date" name="data-inicio" id="data-inicio">
-                         até 
-                        <input type="date" name="data-fim" id="data-fim"> 
-                        <button class="btn btn-primary">Filtrar</button> 
-                        <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                      <p>
+                        filtrar de
+                        <input
+                          type="date"
+                          name="data-inicio"
+                          id="data-inicio"
+                        />
+                        até
+                        <input type="date" name="data-fim" id="data-fim" />
+                        <button class="btn btn-primary">Filtrar</button>
+                        <button
+                          type="button"
+                          name=""
+                          id=""
+                          class="btn btn-danger"
+                        >
+                          Limpar Filtro
+                        </button>
                       </p>
                     </form>
-                    <span class="d-block m-t-5"
-                      >use class <code>table-hover</code> inside table element</span>
                   </div>
                   <div class="card-block table-border-style">
                     <div class="table-responsive">
@@ -70,28 +77,20 @@
                         </thead>
                         <tbody>
                           {% for querie in sql %}
-                            <tr>
-                              <th>R$:{{querie.0|intcomma}}</th>
-                              <td>{{querie.1}}</td>
-                              <td>{{querie.2}}</td>
-                            </tr>
+                          <tr>
+                            <th>R$:{{querie.0|intcomma}}</th>
+                            <td>{{querie.1}}</td>
+                            <td>{{querie.2}}</td>
+                          </tr>
                           {% endfor %}
                         </tbody>
                       </table>
                     </div>
-                    <form action="" method="POST" class="form w-25">
-                      {% csrf_token %}
-                      <label for="taxa">Taxa</label>
-                      <input type="text" id="taxa" name="taxa" class="form-control">
-      
-                      <label for="vendedor">Vendedor</label>
-                      <input type="text" id="vendedor" name="vendedor" class="form-control">
-                    </form>
-                  </div>
                   </div>
                 </div>
               </div>
-              <!-- [ Hover-table ] end -->
+            </div>
+            <!-- [ Hover-table ] end -->
             <!-- [ Main Content ] end -->
           </div>
         </div>
@@ -106,8 +105,8 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 <script>
-  $(document).ready(function(){
-    $('#table-comissoes').DataTable();
-  })
+  $(document).ready(function () {
+    $("#table-comissoes").DataTable();
+  });
 </script>
 {% endblock javascripts %}
