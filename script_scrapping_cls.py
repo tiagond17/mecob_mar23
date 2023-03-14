@@ -82,3 +82,26 @@ def criar_calculos_repasse_com_base_nos_dados():
       except Exception as e:
          print(e)
          continue
+
+""" 
+linhas_nulas = 0
+                    linha = 0
+                    for row in cad_cliente.iter_rows(values_only=True):
+                        if linha < 1:#parametros para pular a primeira linha
+                            linha += 1
+                            continue
+                        #* sistema de parada pronto!
+                        if (row[0]) == None:
+                            linhas_nulas += 1
+                            if linhas_nulas == 2:
+                                break
+                            continue
+                        return HttpResponse(row[0],row[1], row[2])
+                        pessoas, pessoa_criada_bolean = Pessoas.objects.get_or_create(id=row[1], nome=row[0])
+                        cad_cliente_obj, cad_cliente_criado_boolean = CadCliente.objects.get_or_create(
+                            vendedor=pessoas, sim=row[2], nao=row[3], 
+                            operacional=row[4], tcc=row[5], honorarios = row[6],
+                            animal=row[7], evento=row[8], informar_repasse=row[9],
+                        )
+                        linha += 1
+"""

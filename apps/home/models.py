@@ -17,8 +17,7 @@ ou seja, sempre que uma pessoa (que esteja no banco de dados cadastrado na tabel
 realizar uma venda ela é adicionada na tabela CadCliente"""
 
 class CadCliente(models.Model):
-    vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
-    nome = models.CharField(_(""), max_length=128, blank=True, null=True)
+    vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, null=True)
     codigo = models.IntegerField(_(""), blank=True, null=True)
 
     taxas = models.DecimalField(_("Taxas"), max_digits=5, decimal_places=2, blank=True, null=True)
@@ -30,11 +29,6 @@ class CadCliente(models.Model):
     animal = models.CharField(_(""), max_length=256, blank=True, null=True)
     evento = models.CharField(_(""), max_length=256, blank=True, null=True)
     informar_repasse = models.CharField(_(""), max_length=50, blank=True, null=True)
-    vl_juros = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    vl_boletos = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    vl_pago = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    deposito = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    repasse = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
 
 
     class Meta:
@@ -44,7 +38,7 @@ class CadCliente(models.Model):
         managed = True
 
     def __str__(self):
-        return self.nome
+        return f'{self.vendedor.nome or None}'
 
     def get_absolute_url(self):
         return reverse("cad_cliente_model_detail", kwargs={"pk": self.pk})

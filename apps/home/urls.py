@@ -33,6 +33,8 @@ urlpatterns = [
     
     path("download_planilha_cob", views.download_planilha_cob, name="download_planilha_cob"),
     path("upload_planilha_cob", views.upload_planilha_cob, name="upload_planilha_cob"),
+    path("upload_planilha_cavalos_cob", views.upload_planilha_cavalos_cob, name="upload_planilha_cavalos_cob"),
+    path("upload_planilha_cad_clientes", views.upload_planilha_cad_clientes, name="upload_planilha_cad_clientes"),
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
 

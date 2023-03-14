@@ -11,6 +11,9 @@ from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.db import connection
+from django.conf import settings
+import random
+#importe letras
 import tempfile
 import os
 import json
@@ -109,7 +112,6 @@ def pages(request):
                 result = cursor.fetchall()
                 context['sql'] = result
 
-        # se o template a ser carregado for tbl_bootstrap.html carregue contratos
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
                 pass
@@ -714,5 +716,75 @@ def upload_planilha_cob(request, *args, **kwargs):
         #arquivo esta recebendo com sucesso, azer os devidos tratamentos
         return HttpResponse(planilha)
     return HttpResponseRedirect('/form_elements.html')
+
 def editar_boleto_avulso(request, *args, **kwargs):
     return HttpResponse("<h1>FUNCIONOU</h1>")
+
+def upload_planilha_cavalos_cob(request, *args, **kwargs):
+    if request.method == 'POST':
+        planilha = request.FILES.get('docpicker')
+        if planilha is None:
+            return HttpResponse('Nenhum arquivo selecionado')
+        elif planilha.name.endswith('.xlsx'):
+            linhas_nulas = 0
+            wb = openpyxl.load_workbook(planilha)
+            cob = wb.active
+            linha = 0
+            for row in cob.iter_rows(values_only=True):
+                if linha < 1:
+                    linha += 1
+                    continue
+                if (row[0] and row[1] and row[2]) == None:
+                    linhas_nulas += 1
+                    if linhas_nulas == 2:
+                        break
+                    continue
+                Pessoas.objects.get_or_create(id=row[0], nome=row[2])
+                Contratos.objects.get_or_create(id=row[1])
+                linha += 1
+                #* sistema de parada pronto!
+                
+            return HttpResponse('Planilha de cavalos recebida com sucesso')
+        else:
+            return HttpResponse('Arquivo não é do tipo xlsx')
+
+def upload_planilha_cad_clientes(request, *args, **kwargs):
+    if request.method == 'POST':
+        planilha = request.FILES.get('docpicker')
+        if planilha is None:
+            return HttpResponse('Nenhum arquivo selecionado')
+        elif planilha.name.endswith('.xlsx'):
+            wb = openpyxl.load_workbook(planilha)
+            cad_cliente = wb.active
+            linha = 0
+            for row in cad_cliente.iter_rows(values_only=True):
+                if linha < 1:
+                    linha += 1
+                    continue
+                #* sistema de parada
+                if (row[0]) == None:
+                    break
+                try:
+                    pessoa = Pessoas.objects.get(id=row[2])
+                    pessoa.nome = row[0]
+                    pessoa.email = row[1]
+                except Pessoas.DoesNotExist:
+                    pessoa = Pessoas.objects.create(id=row[2], nome=row[0], email=row[1])
+                pessoa.save()
+                try:
+                    cad_cliente = CadCliente.objects.get(vendedor=pessoa)
+                    cad_cliente.sim = row[3]
+                    cad_cliente.nao = row[4]
+                    cad_cliente.operacional = row[5]
+                    cad_cliente.tcc = row[6]
+                    cad_cliente.honorarios = row[7]
+                    cad_cliente.animal = row[8]
+                    cad_cliente.evento = row[9]
+                    cad_cliente.informar_repasse = row[10]
+                except CadCliente.DoesNotExist:
+                    cad_cliente = CadCliente.objects.create(vendedor=pessoa, sim=row[3], nao=row[4], operacional=row[5], tcc=row[6], honorarios=row[7], animal=row[8], evento=row[9], informar_repasse=row[10])
+                cad_cliente.save()
+                
+            return HttpResponse('Planilha {} recebida com sucesso'.format(planilha.name))
+        else:
+            return HttpResponse('Arquivo não é do tipo xlsx')
