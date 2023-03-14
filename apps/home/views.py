@@ -22,7 +22,7 @@ from decimal import Decimal
 from openpyxl.utils import get_column_letter
 
 
-from .existing_models import Contratos, ContratoParcelas, Pessoas
+from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
 
@@ -726,6 +726,7 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
         if planilha is None:
             return HttpResponse('Nenhum arquivo selecionado')
         elif planilha.name.endswith('.xlsx'):
+            erros:list[str] = []
             linhas_nulas = 0
             wb = openpyxl.load_workbook(planilha)
             cob = wb.active
@@ -739,12 +740,86 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                     if linhas_nulas == 2:
                         break
                     continue
-                Pessoas.objects.get_or_create(id=row[0], nome=row[2])
-                Contratos.objects.get_or_create(id=row[1])
+                #TODO: Substituir cada posição do row por uma variavel com um nome mais significativo
+                try:
+                    vendedor = Pessoas.objects.get(id=row[0])
+                except Pessoas.DoesNotExist:
+                    vendedor = Pessoas.objects.create(id=row[0], nome=row[2], email=f"{row[0]}@gmail.com")
+                except Pessoas.MultipleObjectsReturned:
+                    erros.append(f"O vendedor {row[2]} possui mais de um cadastro. linha: {linha}")
+                    continue
+                try:
+                    comprador = Pessoas.objects.get(nome=row[3])
+                except Pessoas.DoesNotExist:
+                    comprador = Pessoas.objects.create(nome=row[3], email=f"{row[3]}@gmail.com")
+                except Pessoas.MultipleObjectsReturned or Exception as e:
+                    erros.append(f"O comprador {row[3]} possui mais de um cadastro. linha: {linha}")
+                    continue
+                    
+                if row[1] is not None and type(row[1]) == int:
+                    if row[1] == 1:
+                        eventos = Eventos.objects.create(nome=row[4], leiloeiro=Pessoas.objects.get(id=99999))
+                        Contratos.objects.create(vendedor=vendedor, comprador=comprador, eventos=eventos, descricao=row[10])
+                    else:
+                        try:
+                            contratos = Contratos.objects.get(id=row[1])
+                            try:
+                                eventos = Eventos.objects.get(id=contratos.eventos)
+                                eventos.nome = row[11]
+                                eventos.save()
+                            except Eventos.DoesNotExist:
+                                eventos = Eventos.objects.create(nome=row[11], leiloeiro=Pessoas.objects.get(id=99999))
+                                eventos.save()
+                            #TODO: Discutir com tiago se pode deixar o usuario alterar o vendedor e comprador do contrato e tambem os id's
+                            contratos.descricao = row[10]
+                            contratos.eventos = eventos
+                        except Contratos.DoesNotExist:
+                            eventos = Eventos.objects.create(nome=row[11], leiloeiro=Pessoas.objects.get(id=99999), dt_evento=date.today(), tipo="qualquer")
+                            contratos = Contratos.objects.create(id=row[1],
+                                vendedor=vendedor, comprador=comprador,
+                                descricao=row[10], eventos=eventos)
+                            contratos.save()
+                else:
+                    erros.append(f"O contrato {row[1]} não existe para o comprador: {row[3]} e vendedor: {row[2]}. linha: {linha}")
+                    continue
+                    
+                try:
+                    contrato_parcelas = ContratoParcelas.objects.get(contratos=contratos, 
+                        nu_parcela=int(str(row[5].split('/')[0][1:])))
+                    contrato_parcelas.dt_vencimento = row[7]
+                    contrato_parcelas.vl_parcela = row[6]
+                    contrato_parcelas.dt_credito = row[8]
+                    contrato_parcelas.save()
+                except ContratoParcelas.DoesNotExist:
+                    contrato_parcelas = ContratoParcelas.objects.create(
+                        contratos=contratos, nu_parcela=int(str(row[5].split('/')[0][1:])),
+                        dt_vencimento=row[7], vl_parcela=row[6], dt_credito=row[8]
+                    )
+                    contrato_parcelas.save()
+                except ContratoParcelas.MultipleObjectsReturned:
+                    erros.append(f"O contrato {contratos.id} possui mais de uma parcela com o numero {row[5]}. linha: {linha}")
+                    #!chances muito poucas de acontecer, mas se acontecer, o sistema vai pegar o primeiro objeto
+                    pass
+                try:
+                    calculo_repasse = Calculo_Repasse.objects.get(contrato_parcelas=contrato_parcelas)
+                    calculo_repasse.deposito = row[12]
+                    calculo_repasse.calculo = row[13]
+                    calculo_repasse.taxas = row[14]
+                    calculo_repasse.adi = row[15]
+                    calculo_repasse.me = row[16]
+                    calculo_repasse.op = row[17]
+                    calculo_repasse.repasses = row[18]
+                    calculo_repasse.comissao = row[19]
+                    calculo_repasse.save()
+                except Calculo_Repasse.DoesNotExist:
+                    calculo_repasse = Calculo_Repasse.objects.create(contrato_parcelas=contrato_parcelas,
+                        deposito=row[12], calculo=row[13], taxas=row[14], adi=row[15],
+                        me=row[16], op=row[17], repasses=row[18], comissao=row[19]
+                    )
+                    calculo_repasse.save()
+                    
                 linha += 1
-                #* sistema de parada pronto!
-                
-            return HttpResponse('Planilha de cavalos recebida com sucesso')
+            return HttpResponse('Planilha de cavalos recebida com sucesso, erros: {}'.format(erros))
         else:
             return HttpResponse('Arquivo não é do tipo xlsx')
 
@@ -770,6 +845,8 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
                     pessoa.email = row[1]
                 except Pessoas.DoesNotExist:
                     pessoa = Pessoas.objects.create(id=row[2], nome=row[0], email=row[1])
+                except Pessoas.MultipleObjectsReturned:
+                    pass
                 pessoa.save()
                 try:
                     cad_cliente = CadCliente.objects.get(vendedor=pessoa)
@@ -782,7 +859,11 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
                     cad_cliente.evento = row[9]
                     cad_cliente.informar_repasse = row[10]
                 except CadCliente.DoesNotExist:
-                    cad_cliente = CadCliente.objects.create(vendedor=pessoa, sim=row[3], nao=row[4], operacional=row[5], tcc=row[6], honorarios=row[7], animal=row[8], evento=row[9], informar_repasse=row[10])
+                    cad_cliente = CadCliente.objects.create(vendedor=pessoa, sim=row[3], nao=row[4],
+                        operacional=row[5], tcc=row[6], honorarios=row[7], animal=row[8],
+                        evento=row[9], informar_repasse=row[10])
+                except CadCliente.MultipleObjectsReturned:
+                    pass
                 cad_cliente.save()
                 
             return HttpResponse('Planilha {} recebida com sucesso'.format(planilha.name))

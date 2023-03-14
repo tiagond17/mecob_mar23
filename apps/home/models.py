@@ -147,7 +147,6 @@ class Calculo_Repasse(models.Model):
     #?repasse: assim que o modelo é criado e devidamente salvo ele é computado com base nas regras do calculo e salvado
     repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     
-    
     """ @property
     def calculo_model(self) -> decimal.Decimal:
         return decimal.Decimal(
