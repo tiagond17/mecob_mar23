@@ -726,6 +726,7 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
         if planilha is None:
             return HttpResponse('Nenhum arquivo selecionado')
         elif planilha.name.endswith('.xlsx'):
+            pessoa_nula = Pessoas.objects.get(id=99999)
             erros:list[str] = []
             linhas_nulas = 0
             wb = openpyxl.load_workbook(planilha)
@@ -735,7 +736,7 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                 if linha < 1:
                     linha += 1
                     continue
-                if (row[0] and row[1] and row[2]) == None:
+                if (row[0] and row[1] and row[2]) == (None or ''):
                     linhas_nulas += 1
                     if linhas_nulas == 2:
                         break
@@ -744,7 +745,7 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                 try:
                     vendedor = Pessoas.objects.get(id=row[0])
                 except Pessoas.DoesNotExist:
-                    vendedor = Pessoas.objects.create(id=row[0], nome=row[2], email=f"{row[0]}@gmail.com")
+                    vendedor = Pessoas.objects.create(id=row[0], nome=row[2], email=f"{row[0]}_{row[2]}@gmail.com")
                 except Pessoas.MultipleObjectsReturned:
                     erros.append(f"O vendedor {row[2]} possui mais de um cadastro. linha: {linha}")
                     continue
@@ -758,26 +759,27 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                     
                 if row[1] is not None and type(row[1]) == int:
                     if row[1] == 1:
-                        eventos = Eventos.objects.create(nome=row[4], leiloeiro=Pessoas.objects.get(id=99999))
-                        Contratos.objects.create(vendedor=vendedor, comprador=comprador, eventos=eventos, descricao=row[10])
+                        eventos = Eventos.objects.create(nome=row[4], leiloeiro=pessoa_nula, dt_evento=date.today(), tipo="qualquer")
+                        Contratos.objects.create(vendedor=vendedor, comprador=comprador, eventos=eventos, descricao=row[10], pessoas_id_inclusao=pessoa_nula)
                     else:
                         try:
                             contratos = Contratos.objects.get(id=row[1])
                             try:
-                                eventos = Eventos.objects.get(id=contratos.eventos)
+                                eventos = Eventos.objects.get(id=contratos.eventos.id)
                                 eventos.nome = row[11]
                                 eventos.save()
                             except Eventos.DoesNotExist:
-                                eventos = Eventos.objects.create(nome=row[11], leiloeiro=Pessoas.objects.get(id=99999))
+                                eventos = Eventos.objects.create(nome=row[11], leiloeiro=pessoa_nula)
                                 eventos.save()
                             #TODO: Discutir com tiago se pode deixar o usuario alterar o vendedor e comprador do contrato e tambem os id's
                             contratos.descricao = row[10]
                             contratos.eventos = eventos
                         except Contratos.DoesNotExist:
-                            eventos = Eventos.objects.create(nome=row[11], leiloeiro=Pessoas.objects.get(id=99999), dt_evento=date.today(), tipo="qualquer")
+                            eventos = Eventos.objects.create(nome=row[11], leiloeiro=Pessoas.objects.get(id=99999),
+                                dt_evento=date.today(), tipo="qualquer")
                             contratos = Contratos.objects.create(id=row[1],
                                 vendedor=vendedor, comprador=comprador,
-                                descricao=row[10], eventos=eventos)
+                                descricao=row[10], eventos=eventos, pessoas_id_inclusao=pessoa_nula)
                             contratos.save()
                 else:
                     erros.append(f"O contrato {row[1]} não existe para o comprador: {row[3]} e vendedor: {row[2]}. linha: {linha}")
