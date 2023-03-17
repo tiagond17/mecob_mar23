@@ -92,8 +92,8 @@ class Credito(models.Model):
     class Meta:
         verbose_name = _("credito")
         verbose_name_plural = _("creditos")
-        managed = True
-        db_table = 'credito'
+        managed = True 
+        db_table = 'credito'#s
 
     def __str__(self):
         #retorne o id

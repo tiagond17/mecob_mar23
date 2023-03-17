@@ -1,0 +1,113 @@
+{% extends "layouts/base.html" %} 
+{% block title %} UI Forms {% endblock %}
+{% load widget_tweaks %}
+{% load utils %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Credito</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Tabelas & Formularios</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Credito</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Credito</h5>
+              <form action="" method="post">
+                {% csrf_token %}
+                <p>
+                  filtrar de
+                  <input
+                    type="date"
+                    name="data-inicio"
+                    id="data-inicio"
+                  />
+                  até
+                  <input type="date" name="data-fim" id="data-fim" />
+                  <button class="btn btn-primary" type="submit" name="filtrar-credito">Filtrar</button>
+                  <button
+                    type="button"
+                    name=""
+                    id=""
+                    class="btn btn-danger"
+                  >
+                    Limpar Filtro
+                  </button>
+                </p>
+              </form>
+              <form method="POST" class="form w-100" name="form-criar-novo-credito">
+                {% csrf_token %}
+                <input required type="text" name="credor" class="form-control" placeholder="ID do Credor">
+                <input type="text" name="pagador" class="form-control" placeholder="ID do Pagador (Opcional)">
+                <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Creditado">
+                <input required type="date" name="data-credito" class="form-control" id="data-credito" placeholder="Data a ser creditada">
+                <input type="descricao" name="descricao" class="form-control" placeholder="Descrição do Credito">
+                <button class="btn btn-success" type="submit" name="novo-credito">Novo Credito</button>
+              </form>
+            </div>
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-credito">
+                  <thead>
+                    <tr>
+                      <th>Cliente ID</th>
+                      <th>Nome do Credor</th>
+                      {% for dia in dias %}
+                      <th>Dia {{dia}}</th>
+                      {% endfor %}
+                      <th>Total Credito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>    
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-credito').DataTable();
+  })
+</script>
+{% endblock javascripts %}

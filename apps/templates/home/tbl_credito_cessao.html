@@ -65,18 +65,6 @@
                         </button>
                       </p>
                     </form>
-                    <div class="forms-group">
-                    </div>
-
-                    {% comment %} <form method="POST" class="form w-100" action="{% url 'home:criar_novo_cadastro_de_credito_e_debito' %}">
-                      {% csrf_token %}
-                      <input type="text" name="credor" class="form-control w-25" placeholder="ID do Credor">
-                      <input type="text" name="pagador" class="form-control w-25" placeholder="Id da Pessoa a ser Debitada">
-                      <input type="number" name="valor" class="form-control w-25" placeholder="Valor a ser Creditado">
-                      <input type="date" name="data-credito" class="form-control w-25" id="data-credito" placeholder="Data a ser creditada">
-                      <input type="descricao" name="descricao" class="form-control w-25" placeholder="Descrição do Credito">
-                      <button class="btn btn-primary" type="submit">Novo Credito</button>
-                    </form> {% endcomment %}
                   </div>
                   <div class="card-block table-border-style">
                     <div class="table-responsive">
@@ -91,15 +79,6 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% for querie in sql %}
-                          <tr>
-                            <th>{{ querie.0 }}</th>
-                            <th>{{ querie.1 }}</th>
-                            <th>Recebedor</th>
-                            <th>{{querie.2}}</th>
-                            <th>Pagador</th>
-                          </tr>
-                          {% endfor %}
                         </tbody>
                       </table>
                     </div>
@@ -148,17 +127,6 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% for querie in creditos_e_debitos_sql %}
-                            <tr>
-                              <th>{{forloop.counter}}</th>
-                              <th>{{querie.0}}</th>
-                              <th>{{querie.1}}</th>
-                              <th>{{querie.2}}</th>
-                              <th>{{querie.3}}</th>
-                              <th>{{querie.4}}</th>
-                              <th>{{querie.5}}</th>
-                            </tr>
-                          {% endfor %}
                         </tbody>
                       </table>
                     </div>
@@ -211,80 +179,10 @@
                             <th>Nome do Credor</th>
                             <th>Data Creditado</th>
                             <th>Dia 1</th>
-                            <th>Dia 2</th>
-                            <th>Dia 3</th>
-                            <th>Dia 4</th>
-                            <th>Dia 5</th>
-                            <th>Dia 6</th>
-                            <th>Dia 7</th>
-                            <th>Dia 8</th>
-                            <th>Dia 9</th>
-                            <th>Dia 10</th>
-                            <th>Dia 11</th>
-                            <th>Dia 12</th>
-                            <th>Dia 13</th>
-                            <th>Dia 14</th>
-                            <th>Dia 15</th>
-                            <th>Dia 16</th>
-                            <th>Dia 17</th>
-                            <th>Dia 18</th>
-                            <th>Dia 19</th>
-                            <th>Dia 20</th>
-                            <th>Dia 21</th>
-                            <th>Dia 22</th>
-                            <th>Dia 23</th>
-                            <th>Dia 24</th>
-                            <th>Dia 25</th>
-                            <th>Dia 26</th>
-                            <th>Dia 27</th>
-                            <th>Dia 28</th>
-                            <th>Dia 29</th>
-                            <th>Dia 30</th>
-                            <th>Dia 31</th>
                             <th>Total Credito</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for querie in creditos %}
-                          <tr>
-                            <th>{{forloop.counter}}</th>
-                            <td>{{querie.0}}</td>
-                            <td>{{querie.1}}</td>
-                            <td>{{querie.2}}</td>
-                            <td>{{querie.3}}</td>
-                            <td>{{querie.4}}</td>
-                            <td>{{querie.5}}</td>
-                            <td>{{querie.6}}</td>
-                            <td>{{querie.7}}</td>
-                            <td>{{querie.8}}</td>
-                            <td>{{querie.9}}</td>
-                            <td>{{querie.10}}</td>
-                            <td>{{querie.11}}</td>
-                            <td>{{querie.12}}</td>
-                            <td>{{querie.13}}</td>
-                            <td>{{querie.14}}</td>
-                            <td>{{querie.15}}</td>
-                            <td>{{querie.16}}</td>
-                            <td>{{querie.17}}</td>
-                            <td>{{querie.18}}</td>
-                            <td>{{querie.19}}</td>
-                            <td>{{querie.20}}</td>
-                            <td>{{querie.21}}</td>
-                            <td>{{querie.22}}</td>
-                            <td>{{querie.23}}</td>
-                            <td>{{querie.24}}</td>
-                            <td>{{querie.25}}</td>
-                            <td>{{querie.26}}</td>
-                            <td>{{querie.27}}</td>
-                            <td>{{querie.28}}</td>
-                            <td>{{querie.29}}</td>
-                            <td>{{querie.30}}</td>
-                            <td>{{querie.31}}</td>
-                            <td>{{querie.32}}</td>
-                            <td>{{querie.33}}</td>
-                            <td>{{querie.34}}</td>
-                          </tr>
-                          {% endfor %}
                         </tbody>
                       </table>
                     </div>
@@ -337,81 +235,10 @@
                             <th>ID do Pagado</th>
                             <th>Pagador</th>
                             <th>Data Debitada</th>
-                            <th>Dia 1</th>
-                            <th>Dia 2</th>
-                            <th>Dia 3</th>
-                            <th>Dia 4</th>
-                            <th>Dia 5</th>
-                            <th>Dia 6</th>
-                            <th>Dia 7</th>
-                            <th>Dia 8</th>
-                            <th>Dia 9</th>
-                            <th>Dia 10</th>
-                            <th>Dia 11</th>
-                            <th>Dia 12</th>
-                            <th>Dia 13</th>
-                            <th>Dia 14</th>
-                            <th>Dia 15</th>
-                            <th>Dia 16</th>
-                            <th>Dia 17</th>
-                            <th>Dia 18</th>
-                            <th>Dia 19</th>
-                            <th>Dia 20</th>
-                            <th>Dia 21</th>
-                            <th>Dia 22</th>
-                            <th>Dia 23</th>
-                            <th>Dia 24</th>
-                            <th>Dia 25</th>
-                            <th>Dia 26</th>
-                            <th>Dia 27</th>
-                            <th>Dia 28</th>
-                            <th>Dia 29</th>
-                            <th>Dia 30</th>
-                            <th>Dia 31</th>
                             <th>Total Debito</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for querie in debitos %}
-                          <tr>
-                            <th>{{forloop.counter}}</th>
-                            <td>{{querie.0}}</td>
-                            <td>{{querie.1}}</td>
-                            <td>{{querie.2}}</td>
-                            <td>{{querie.3}}</td>
-                            <td>{{querie.4}}</td>
-                            <td>{{querie.5}}</td>
-                            <td>{{querie.6}}</td>
-                            <td>{{querie.7}}</td>
-                            <td>{{querie.8}}</td>
-                            <td>{{querie.9}}</td>
-                            <td>{{querie.10}}</td>
-                            <td>{{querie.11}}</td>
-                            <td>{{querie.12}}</td>
-                            <td>{{querie.13}}</td>
-                            <td>{{querie.14}}</td>
-                            <td>{{querie.15}}</td>
-                            <td>{{querie.16}}</td>
-                            <td>{{querie.17}}</td>
-                            <td>{{querie.18}}</td>
-                            <td>{{querie.19}}</td>
-                            <td>{{querie.20}}</td>
-                            <td>{{querie.21}}</td>
-                            <td>{{querie.22}}</td>
-                            <td>{{querie.23}}</td>
-                            <td>{{querie.24}}</td>
-                            <td>{{querie.25}}</td>
-                            <td>{{querie.26}}</td>
-                            <td>{{querie.27}}</td>
-                            <td>{{querie.28}}</td>
-                            <td>{{querie.29}}</td>
-                            <td>{{querie.30}}</td>
-                            <td>{{querie.31}}</td>
-                            <td>{{querie.32}}</td>
-                            <td>{{querie.33}}</td>
-                            <td>{{querie.34}}</td>
-                          </tr>
-                          {% endfor %}
                         </tbody>
                       </table>
                     </div>

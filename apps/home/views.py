@@ -46,43 +46,33 @@ def index(request):
 def preencher_tabela_cob(data_inicio, data_fim):
     with connection.cursor() as cursor:
         cursor.execute(f"""
-SELECT
-    cp.contratos_id as id_contrato,
-    CASE WHEN NOT ISNULL(pev.nome) THEN pev.nome ELSE 'boleto avulso' END as vendedor,
-    CASE WHEN NOT ISNULL(pec.nome) THEN pec.nome ELSE peb.nome END as comprador,
-    cp.nu_parcela as nu_parcela,
-    cp.vl_parcela as vl_parcela,
-    cp.vl_pagto,
-    cp.dt_vencimento as dt_vencimento,
-    cp.dt_credito as dt_credito,
-    cp.dt_processo_pagto as dt_processamento,
-    CASE WHEN cp.contratos_id > 12460 OR ISNULL(cp.contratos_id) THEN 'UNICRED' ELSE 'BRADESCO' END as banco,
-    co.parcela_primeiro_pagto as parcela_primeiro_pagto,
-    co.nu_parcelas as tt_parcelas,
-    (SELECT COUNT(*) FROM contrato_parcelas cpx 
-    WHERE cpx.contratos_id = cp.contratos_id 
-        AND (NOT ISNULL(dt_pagto) AND NOT dt_pagto = '0000-00-00') ) as tt_quitadas,
-    ev.nome as evento,
-    co.descricao as produto,
-    cr.deposito,
-    cr.calculo,
-    cr.taxas,
-    cr.adi,
-    cr.me,
-    cr.op,
-    cr.repasses,
-    cr.comissao
-FROM contrato_parcelas cp
-LEFT JOIN contratos co ON co.id = cp.contratos_id
-LEFT JOIN boletos_avulso bo ON bo.id = cp.boletos_avulso_id
-LEFT JOIN pessoas pec ON pec.id = co.comprador_id
-LEFT JOIN pessoas pev ON pev.id = co.vendedor_id
-LEFT JOIN pessoas peb ON peb.id = bo.pessoas_id
-LEFT JOIN eventos ev ON ev.id = co.eventos_id
-LEFT JOIN calculo_repasse cr ON cr.id_contrato_id = cp.contratos_id AND cr.nu_parcela = cp.nu_parcela
-WHERE cp.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}'
-AND NOT ISNULL(arquivos_id_retorno)
-ORDER BY cp.dt_credito ASC, cp.nu_parcela ASC""")
+select cp.contratos_id as id_parcela_contratos,
+case when not isnull(pessoa_vendedor.nome) then pessoa_vendedor.nome else 'boleto avulso' end as vendedor,
+case when not isnull(pessoa_comprador.nome) then pessoa_comprador.nome else 'Comprador não localizado' end as comprador,
+cp.nu_parcela as nu_parcela,
+cp.vl_parcela as vl_parcela,
+cp.dt_vencimento as dt_vencimento,
+cp.dt_credito as dt_credito,
+case when cp.contratos_id > 12460 or isnull(cp.contratos_id) then 'UNICRED' else 'BRADESCO' end as banco,
+eventos.nome,
+co.descricao as produto,
+cr.deposito,
+cr.calculo,
+cr.taxas,
+cr.adi,
+cr.me,
+cr.op,
+cr.repasses,
+cr.comissao
+from contrato_parcelas as cp
+left join contratos as co on cp.contratos_id = co.id
+left join pessoas as pessoa_comprador on pessoa_comprador.id = co.comprador_id
+left join pessoas as pessoa_vendedor on pessoa_vendedor.id = co.vendedor_id
+left join calculo_repasse as cr on cr.contrato_parcelas_id = cp.id
+left join eventos as eventos on eventos.id = co.eventos_id
+where cp.dt_credito BETWEEN '{data_inicio}' and '{data_fim}'
+ORDER BY cp.dt_credito ASC
+""")
         result = cursor.fetchall()
         return result
 
@@ -207,130 +197,107 @@ def pages(request):
                     data_inicio=data_inicio, data_fim=data_fim)
                 request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
             #!context['cad_clientes'] = CadCliente.objects.all()
+        
+        elif load_template == 'tbl_credito.html':
+            if request.method == 'POST':
+                if 'novo-credito' in request.POST:
+                    credor = request.POST.get('credor')
+                    pagador = request.POST.get('pagador')
+                    valor = request.POST.get('valor')
+                    data_credito = request.POST.get('data-credito')
+                    descricao = request.POST.get('descricao')
+                    if credor == pagador:
+                        return HttpResponse("Credor e Pagador não podem ser iguais")
+                    if pagador:
+                        Debito.objects.create(cliente=Pessoas.objects.get(id=pagador), vl_debito=valor, dt_debitado=data_credito, descricao=descricao)
+                    Credito.objects.create(cliente=Pessoas.objects.get(id=credor), vl_credito=valor, dt_creditado=data_credito, descricao=descricao)
+                elif 'filtrar-credito' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
+                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    dias = []
+                    for dia in dias_de_consulta:
+                        dias.append(f"SUM(CASE WHEN DAY(credito.dt_creditado) = {dia} THEN credito.vl_credito ELSE 0 END) AS dia_{dia}")
+                    context['dias'] = dias_de_consulta
+                    with connection.cursor() as cursor:
+                        cursor.execute(f"""
+                            SELECT cliente_id, nome,
+                            {', '.join(dias)},
+                            SUM(credito.vl_credito) as total_credito
+                            from credito
+                            left join pessoas on pessoas.id = cliente_id
+                            where date(credito.dt_creditado) >= '{data_inicio}' AND date(credito.dt_creditado) <= '{data_fim}'
+                            group by credito.cliente_id
+                            order by cliente_id""")
+                        context['creditos'] = cursor.fetchall()
+                    tbody = ""
+                    for resultado in context['creditos']:
+                        cliente_id = resultado[0]
+                        nome = resultado[1]
+                        valores_diarios = resultado[2:-1]
+                        total_credito = resultado[-1]
+                        linha = f"""
+                        <tr>
+                            <td>{cliente_id}</td>
+                            <td>{nome}</td>
+                        """
+                        for dia in valores_diarios:
+                            linha += f"<td>{dia}</td>"
+                        linha += f"<td>{total_credito}</td></tr>"
+                        tbody += linha
+                    context['tbody'] = tbody
+                    
+        elif load_template == 'tbl_debito.html':
+            if request.method == 'POST':
+                
+                if 'novo-debito' in request.POST:
+                    print("form novo debito")
+                elif 'filtrar-debito' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
+                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    dias = []
+                    for dia in dias_de_consulta:
+                        dias.append(f"SUM(CASE WHEN DAY(debito.dt_debitado) = {dia} THEN debito.vl_debito ELSE 0 END) AS dia_{dia}")
+                    context['dias'] = dias_de_consulta
+                    with connection.cursor() as cursor:
+                        cursor.execute(f"""
+                            SELECT cliente_id, nome,
+                            {', '.join(dias)},
+                            SUM(debito.vl_debito) as total_debito
+                            from debito
+                            left join pessoas on pessoas.id = debito.cliente_id
+                            where date(debito.dt_debitado) >= '{data_inicio}' AND date(debito.dt_debitado) <= '{data_fim}'
+                            group by debito.cliente_id
+                            order by cliente_id""")
+                        context['debitos'] = cursor.fetchall()
+                    tbody = ""
+                    for resultado in context['debitos']:
+                        cliente_id = resultado[0]
+                        nome = resultado[1]
+                        valores_diarios = resultado[2:-1]
+                        total_debito = resultado[-1]
+                        linha = f"""
+                        <tr>
+                            <td>{cliente_id}</td>
+                            <td>{nome}</td>
+                        """
+                        for dia in valores_diarios:
+                            linha += f"<td>{dia}</td>"
+                        linha += f"<td>{total_debito}</td></tr>"
+                        tbody += linha
+                    context['tbody'] = tbody
 
         elif load_template == 'tbl_credito_cessao.html':
-            if request.method == "POST":
-                pass
-                context['nothing'] = None
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT distinct vendedor_id,
-                    nome, 
-                    nu_parcelas, 
-                    dt_contrato FROM contratos
-                    join pessoas
-                    where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
-                    and repasse = 'S' and pessoas.id=vendedor_id
-                    order by contratos.id desc
-                    """
-                )
-                context['sql'] = cursor.fetchall()
-                cursor.execute("""
-                    SELECT
-                        pc.nome AS Credor,
-                        pd.nome AS Pagador,
-                        c.dt_creditado as `Data`,
-                        c.vl_credito AS `Valor Creditado`,
-                        -d.vl_debito AS `Valor Debitado`,
-                        c.descricao AS Descricao
-                    FROM credito c
-                    LEFT JOIN debito d ON d.dt_debitado = c.dt_creditado and d.vl_debito = c.vl_credito
-                    LEFT JOIN pessoas pc ON pc.id = c.cliente_id
-                    LEFT JOIN pessoas pd ON pd.id = d.cliente_id
-                    WHERE c.dt_creditado >= '2022-03-02'
-                    GROUP BY pc.nome, pd.nome, c.vl_credito, d.vl_debito, c.descricao;
-                """)
-                context['creditos_e_debitos_sql'] = cursor.fetchall()
-                cursor.execute("""
-                    SELECT p.id, p.nome AS nome_credor, c.dt_creditado,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 1 THEN c.vl_credito ELSE 0 END) AS dia_1,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 2 THEN c.vl_credito ELSE 0 END) AS dia_2,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 3 THEN c.vl_credito ELSE 0 END) AS dia_3,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 4 THEN c.vl_credito ELSE 0 END) AS dia_4,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 5 THEN c.vl_credito ELSE 0 END) AS dia_5,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 6 THEN c.vl_credito ELSE 0 END) AS dia_6,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 7 THEN c.vl_credito ELSE 0 END) AS dia_7,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 8 THEN c.vl_credito ELSE 0 END) AS dia_8,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 9 THEN c.vl_credito ELSE 0 END) AS dia_9,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 10 THEN c.vl_credito ELSE 0 END) AS dia_10,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 11 THEN c.vl_credito ELSE 0 END) AS dia_11,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 12 THEN c.vl_credito ELSE 0 END) AS dia_12,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 13 THEN c.vl_credito ELSE 0 END) AS dia_13,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 14 THEN c.vl_credito ELSE 0 END) AS dia_14,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 15 THEN c.vl_credito ELSE 0 END) AS dia_15,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 16 THEN c.vl_credito ELSE 0 END) AS dia_16,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 17 THEN c.vl_credito ELSE 0 END) AS dia_17,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 18 THEN c.vl_credito ELSE 0 END) AS dia_18,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 19 THEN c.vl_credito ELSE 0 END) AS dia_19,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 20 THEN c.vl_credito ELSE 0 END) AS dia_20,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 21 THEN c.vl_credito ELSE 0 END) AS dia_21,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 22 THEN c.vl_credito ELSE 0 END) AS dia_22,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 23 THEN c.vl_credito ELSE 0 END) AS dia_23,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 24 THEN c.vl_credito ELSE 0 END) AS dia_24,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 25 THEN c.vl_credito ELSE 0 END) AS dia_25,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 26 THEN c.vl_credito ELSE 0 END) AS dia_26,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 27 THEN c.vl_credito ELSE 0 END) AS dia_27,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 28 THEN c.vl_credito ELSE 0 END) AS dia_28,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 29 THEN c.vl_credito ELSE 0 END) AS dia_29,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 30 THEN c.vl_credito ELSE 0 END) AS dia_30,
-                    SUM(CASE WHEN DAY(c.dt_creditado) = 31 THEN c.vl_credito ELSE 0 END) AS dia_31,
-                    SUM(c.vl_credito) AS total_credito
-                    FROM credito AS c
-                    JOIN pessoas AS p ON c.cliente_id = p.id
-                    WHERE c.dt_creditado >= '2022-03-01'
-                    GROUP BY p.id, p.nome
-                """)
-                context['creditos'] = cursor.fetchall()
-                cursor.execute("""
-                               SELECT p.id, p.nome AS `Nome do Pagador`, c.dt_debitado,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 1 THEN c.vl_debito ELSE 0 END) AS dia_1,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 2 THEN c.vl_debito ELSE 0 END) AS dia_2,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 3 THEN c.vl_debito ELSE 0 END) AS dia_3,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 4 THEN c.vl_debito ELSE 0 END) AS dia_4,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 5 THEN c.vl_debito ELSE 0 END) AS dia_5,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 6 THEN c.vl_debito ELSE 0 END) AS dia_6,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 7 THEN c.vl_debito ELSE 0 END) AS dia_7,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 8 THEN c.vl_debito ELSE 0 END) AS dia_8,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 9 THEN c.vl_debito ELSE 0 END) AS dia_9,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 10 THEN c.vl_debito ELSE 0 END) AS dia_10,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 11 THEN c.vl_debito ELSE 0 END) AS dia_11,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 12 THEN c.vl_debito ELSE 0 END) AS dia_12,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 13 THEN c.vl_debito ELSE 0 END) AS dia_13,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 14 THEN c.vl_debito ELSE 0 END) AS dia_14,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 15 THEN c.vl_debito ELSE 0 END) AS dia_15,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 16 THEN c.vl_debito ELSE 0 END) AS dia_16,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 17 THEN c.vl_debito ELSE 0 END) AS dia_17,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 18 THEN c.vl_debito ELSE 0 END) AS dia_18,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 19 THEN c.vl_debito ELSE 0 END) AS dia_19,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 20 THEN c.vl_debito ELSE 0 END) AS dia_20,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 21 THEN c.vl_debito ELSE 0 END) AS dia_21,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 22 THEN c.vl_debito ELSE 0 END) AS dia_22,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 23 THEN c.vl_debito ELSE 0 END) AS dia_23,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 24 THEN c.vl_debito ELSE 0 END) AS dia_24,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 25 THEN c.vl_debito ELSE 0 END) AS dia_25,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 26 THEN c.vl_debito ELSE 0 END) AS dia_26,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 27 THEN c.vl_debito ELSE 0 END) AS dia_27,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 28 THEN c.vl_debito ELSE 0 END) AS dia_28,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 29 THEN c.vl_debito ELSE 0 END) AS dia_29,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 30 THEN c.vl_debito ELSE 0 END) AS dia_30,
-                    SUM(CASE WHEN DAY(c.dt_debitado) = 31 THEN c.vl_debito ELSE 0 END) AS dia_31,
-                    SUM(c.vl_debito) AS total_debito
-                    FROM debito AS c
-                    JOIN pessoas AS p ON c.cliente_id = p.id
-                    WHERE c.dt_debitado >= '2022-03-01'
-                    GROUP BY p.id, p.nome
-                    """)
-                context['debitos'] = cursor.fetchall()
-            #context['taxas'] = Taxa.objects.filter(dt_taxa__range=('2022-01-01', '2023-03-02'), taxas__gt=0)
-            #context['repasse_retido'] = RepasseRetido.objects.filter(dt_rep_retido__gt="2022-03-01")
+            pass
 
             
         elif load_template == 'tbl_mensal_bootstrap.html':
-            if request.method == 'POST':
-                pass
             with connection.cursor() as cursor:
-                #! provavelmente seria melhor utilizar o cp.dt_credito ao inves do cr.dt_credito
                 #! Transforma esse codigo sql em ORM
                 cursor.execute(
                     """
@@ -533,53 +500,56 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
         SELECT
             c.vendedor_id,
             p.nome AS nome_vendedor,
-            repasse_retido.vlr_rep_retido as valor_repasse_retido,
+            COALESCE(repasse_retido.vlr_rep_retido, 0) as vlr_rep_retido,
             {', '.join(dias)},
-            SUM(DISTINCT credito.vl_credito) as tt_creditos,
-            SUM(DISTINCT taxas.taxas) as tt_taxas,
-            SUM(DISTINCT debito.vl_debito) as tt_debitos,
+            COALESCE(credito.vl_credito, 0) as vl_credito,
+            COALESCE(debito.vl_debito, 0) as vl_debito,
+            COALESCE(taxas.taxas, 0) as taxas,
             SUM(cr.repasses)
-                + SUM(DISTINCT COALESCE(repasse_retido.vlr_rep_retido,0))
-                - SUM(DISTINCT COALESCE(debito.vl_debito, 0))
-                - SUM(DISTINCT COALESCE(taxas.taxas, 0))
-                + SUM(DISTINCT COALESCE(credito.vl_credito, 0))
+                + COALESCE(repasse_retido.vlr_rep_retido,0)
+                - COALESCE(debito.vl_debito, 0)
+                - COALESCE(taxas.taxas, 0)
+                + COALESCE(credito.vl_credito, 0)
                 AS total_repasses
         FROM
             calculo_repasse AS cr
-            INNER JOIN contratos AS c ON cr.id_contrato_id = c.id
+            INNER JOIN contrato_parcelas AS cp ON cr.contrato_parcelas_id = cp.id
+            INNER JOIN contratos AS c ON cp.contratos_id = c.id
             INNER JOIN pessoas AS p ON c.vendedor_id = p.id
             LEFT JOIN (
             SELECT cliente_id, SUM(vl_credito) AS vl_credito 
             FROM credito
             WHERE dt_creditado BETWEEN '{data_inicio}' AND '{data_fim}'
             GROUP BY cliente_id
-            )
-            AS credito ON credito.cliente_id = c.vendedor_id
-            LEFT JOIN (
-            SELECT cliente_id, SUM(vl_debito) AS vl_debito 
+        )
+        AS credito ON credito.cliente_id = c.vendedor_id
+        LEFT JOIN (
+            SELECT cliente_id, SUM(vl_debito) AS vl_debito
             FROM debito
             WHERE dt_debitado BETWEEN '{data_inicio}' AND '{data_fim}'
             GROUP BY cliente_id
-            )
-            AS debito ON debito.cliente_id = c.vendedor_id
-            LEFT JOIN (
-                SELECT cliente_id, SUM(taxas) as taxas
-                FROM taxas
-                WHERE dt_taxa BETWEEN '{data_inicio}' AND '{data_fim}'
-                GROUP BY cliente_id
-            )
-            as taxas on taxas.cliente_id = c.vendedor_id
-            LEFT JOIN (
-                SELECT cliente_id, SUM(vlr_rep_retido) as vlr_rep_retido
-                from repasse_retido
-                WHERE dt_rep_retido BETWEEN '{data_inicio}' AND '{data_fim}'
-                group by cliente_id
-            )
-            as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
-            WHERE
-            cr.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}' and c.repasse = 'S'
-            GROUP BY
+        )
+        AS debito ON debito.cliente_id = c.vendedor_id
+        LEFT JOIN (
+            SELECT cliente_id, SUM(taxas) as taxas
+            FROM taxas
+            WHERE dt_taxa BETWEEN '{data_inicio}' AND '{data_fim}'
+            GROUP BY cliente_id
+        )
+        as taxas on taxas.cliente_id = c.vendedor_id
+        LEFT JOIN (
+            SELECT cliente_id, SUM(vlr_rep_retido) as vlr_rep_retido
+            from repasse_retido
+            WHERE dt_rep_retido BETWEEN '{data_inicio}' AND '{data_fim}'
+            group by cliente_id
+        )
+        as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
+        WHERE
+            cr.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}'
+        GROUP BY
             c.vendedor_id, p.nome
+        ORDER BY
+            c.vendedor_id
         """
     
         with connection.cursor() as cursor:
@@ -612,8 +582,8 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             
             linha += f"""
             <td>{total_creditos}</td>
-            <td>{total_taxas}</td>
             <td>{totaL_debitos}</td>
+            <td>{total_taxas}</td>
             <td>{total_repasses}</td>
             </tr>
             """
@@ -784,18 +754,19 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                 else:
                     erros.append(f"O contrato {row[1]} não existe para o comprador: {row[3]} e vendedor: {row[2]}. linha: {linha}")
                     continue
-                    
                 try:
                     contrato_parcelas = ContratoParcelas.objects.get(contratos=contratos, 
-                        nu_parcela=int(str(row[5].split('/')[0][1:])))
+                        nu_parcela=int(str(row[5].split('/')[0][1:]))
+                        )
                     contrato_parcelas.dt_vencimento = row[7]
                     contrato_parcelas.vl_parcela = row[6]
                     contrato_parcelas.dt_credito = row[8]
                     contrato_parcelas.save()
                 except ContratoParcelas.DoesNotExist:
                     contrato_parcelas = ContratoParcelas.objects.create(
-                        contratos=contratos, nu_parcela=int(str(row[5].split('/')[0][1:])),
-                        dt_vencimento=row[7], vl_parcela=row[6], dt_credito=row[8]
+                        contratos=contratos,
+                        dt_vencimento=row[7], vl_parcela=row[6], dt_credito=row[8],
+                        nu_parcela=int(str(row[5].split('/')[0][1:]))
                     )
                     contrato_parcelas.save()
                 except ContratoParcelas.MultipleObjectsReturned:
@@ -812,16 +783,17 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                     calculo_repasse.op = row[17]
                     calculo_repasse.repasses = row[18]
                     calculo_repasse.comissao = row[19]
+                    calculo_repasse.dt_credito = contrato_parcelas.dt_credito
                     calculo_repasse.save()
                 except Calculo_Repasse.DoesNotExist:
                     calculo_repasse = Calculo_Repasse.objects.create(contrato_parcelas=contrato_parcelas,
                         deposito=row[12], calculo=row[13], taxas=row[14], adi=row[15],
-                        me=row[16], op=row[17], repasses=row[18], comissao=row[19]
+                        me=row[16], op=row[17], repasses=row[18], comissao=row[19], dt_credito=contrato_parcelas.dt_credito
                     )
                     calculo_repasse.save()
                     
                 linha += 1
-            return HttpResponse('Planilha de cavalos recebida com sucesso, erros: {}'.format(erros))
+            return HttpResponse('Planilha de cavalos recebida com sucesso, linhas lidas: {}, erros: {}'.format(linha,erros))
         else:
             return HttpResponse('Arquivo não é do tipo xlsx')
 
@@ -871,3 +843,50 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
             return HttpResponse('Planilha {} recebida com sucesso'.format(planilha.name))
         else:
             return HttpResponse('Arquivo não é do tipo xlsx')
+
+def upload_planilha_parcelas_taxas(request, *args, **kwargs):
+    if request.method == "POST":
+        planilha = request.FILES.get('docpicker')
+        if planilha is None:
+            return HttpResponse('Nenhum arquivo selecionado')
+        elif not planilha.name.endswith('.xlsx'):
+            return HttpResponse('Arquivo não é do tipo xlsx')
+        linhas_nulas = 0
+        linhas = 0
+        erros:list[str] = []
+        wb = openpyxl.load_workbook(planilha)
+        segunda_quinzena = wb.active
+        for row in segunda_quinzena.iter_rows(values_only=True):
+            if linhas < 2:
+                linhas += 1
+                continue
+            if row[0] == None or row[0] == '':
+                break
+            contrato_parcelas_id = row[0]
+            comprador_nome = row[1]
+            vendedor_nome = row[2]
+            parcela = row[3]# (1/2), pegar o primeiro digito antes da barra
+            vencimento = row[4] #14/01/2023, dia 14 mes 01 ano 2023
+            valor = row[5]
+            tcc = row[6]
+            ted = row[7]
+            desconto_total = row[8]
+            hon = row[9]
+            repasse = row[10]
+            try:
+                comprador = Pessoas.objects.get(nome=comprador_nome)
+            except Pessoas.DoesNotExist:
+                comprador = Pessoas.objects.create(nome=comprador_nome, email=f"{comprador_nome}-email@nãoexiste.com.br")
+            except Pessoas.MultipleObjectsReturned:
+                erros.append(f"Erro na linha {linhas}, comprador {comprador_nome} possui mais de um cadastro")
+            Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=vencimento)
+            try:
+                vendedor = Pessoas.objects.get(nome=vendedor_nome)
+            except Pessoas.DoesNotExist:
+                vendedor = Pessoas.objects.create(nome=vendedor_nome, email=f"{vendedor_nome}-email@nãoexiste.com.br")
+            except Pessoas.MultipleObjectsReturned:
+                erros.append(f"Erro na linha {linhas}, vendedor {vendedor_nome} possui mais de um cadastro")
+            Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=vencimento)
+            linhas += 1
+        
+        return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
