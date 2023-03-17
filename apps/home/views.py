@@ -106,44 +106,6 @@ def pages(request):
             if request.method == 'POST':
                 pass
         
-        elif load_template == 'tbl_boletos_avulso.html':
-            if request.method == 'POST':
-                data_inicial = request.POST.get('data-inicio')
-                data_fim = request.POST.get('data-fim')
-                with connection.cursor() as cursor:
-                    cursor.execute(f"""
-                                   SELECT
-                cp.contratos_id as id_contrato,
-                case when not isnull(pev.nome) then pev.nome else 'boleto avulso' end as vendedor,
-                case when not isnull(pec.nome) then pec.nome else peb.nome end as comprador,
-                cp.nu_parcela as nu_parcela,
-                cp.vl_parcela as vl_parcela,
-                cp.vl_pagto,
-                cp.dt_vencimento as dt_vencimento,
-                cp.dt_credito as dt_credito,
-                cp.dt_processo_pagto as dt_processamento,
-                case when cp.contratos_id > 12460 or isnull(cp.contratos_id) then 'UNICRED' else 'BRADESCO' end as banco,
-                co.parcela_primeiro_pagto as parcela_primeiro_pagto,
-                co.nu_parcelas as tt_parcelas,
-                (select count(*) from contrato_parcelas cpx 
-                where cpx.contratos_id = cp.contratos_id 
-                    and (not isnull(dt_pagto) and not dt_pagto = '0000-00-00') ) as tt_quitadas,
-                ev.nome as evento,
-                co.descricao as produto
-                
-            FROM contrato_parcelas cp
-            LEFT JOIN contratos co on co.id = cp.contratos_id
-            LEFT JOIN boletos_avulso bo on bo.id = cp.boletos_avulso_id
-            LEFT JOIN pessoas pec on pec.id = co.comprador_id
-            LEFT JOIN pessoas pev on pev.id = co.vendedor_id
-            LEFT JOIN pessoas peb on peb.id = bo.pessoas_id
-            LEFT JOIN eventos ev on ev.id = co.eventos_id
-            where date(dt_credito) >= '{data_inicial}' AND date(dt_credito) <= '{data_fim}' and isnull(cp.contratos_id)
-            and not isnull(arquivos_id_retorno)
-            order by banco desc, cp.contratos_id  asc""")
-                    context['boletos_avulso'] = cursor.fetchall()
-                #context['boletos_avulso'] = ContratoParcelas.objects.filter(contratos__isnull=True, dt_credito__gte=data_inicial, dt_credito__lte=data_fim)
-            pass
 
         elif load_template == 'cad_clientes_table_bootstrap.html':
             context['cad_clientes'] = CadCliente.objects.all()
@@ -251,9 +213,17 @@ def pages(request):
                     
         elif load_template == 'tbl_debito.html':
             if request.method == 'POST':
-                
                 if 'novo-debito' in request.POST:
-                    print("form novo debito")
+                    pagador = request.POST.get('pagador')
+                    credor = request.POST.get('credor')
+                    valor = request.POST.get('valor')
+                    data_debito = request.POST.get('data-debito')
+                    descricao = request.POST.get('descricao')
+                    if credor == pagador:
+                        return HttpResponse("Credor e Pagador não podem ser iguais")
+                    if credor:
+                        Credito.objects.create(cliente=Pessoas.objects.get(id=credor), vl_credito=valor, dt_creditado=data_debito, descricao=descricao)
+                    Debito.objects.create(cliente=Pessoas.objects.get(id=pagador), vl_debito=valor, dt_debitado=data_debito, descricao=descricao)
                 elif 'filtrar-debito' in request.POST:
                     data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
                     data_fim = request.POST.get('data-fim')  # 2022-08-21:str
@@ -291,62 +261,117 @@ def pages(request):
                         linha += f"<td>{total_debito}</td></tr>"
                         tbody += linha
                     context['tbody'] = tbody
+                    
+        elif load_template == 'tbl_taxas.html':
+            if request.method == 'POST':
+                if 'nova-taxa' in request.POST:
+                    cliente_id = request.POST.get('cliente')
+                    valor = request.POST.get('valor')
+                    data_taxa = request.POST.get('data-taxa')
+                    descricao = request.POST.get('descricao')
+                    try:
+                        cliente = Pessoas.objects.get(id=cliente_id)
+                    except Pessoas.DoesNotExist:
+                        return HttpResponse("Cliente não encontrado")
+                    except Pessoas.MultipleObjectsReturned:
+                        return HttpResponse("Mais de um cliente encontrado, {}".format(Pessoas.objects.filter(id=cliente_id)))
+                    Taxa.objects.create(cliente=cliente, taxas=valor, dt_taxa=data_taxa, descricao=descricao)
+                elif 'filtrar-taxa' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
+                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    dias = []
+                    for dia in dias_de_consulta:
+                        dias.append(f"SUM(CASE WHEN DAY(taxas.dt_taxa) = {dia} THEN taxas.taxas ELSE 0 END) AS dia_{dia}")
+                    context['dias'] = dias_de_consulta
+                    with connection.cursor() as cursor:
+                        cursor.execute(f"""
+                            SELECT cliente_id, nome,
+                            {', '.join(dias)},
+                            SUM(taxas.taxas) as total_taxas
+                            from taxas
+                            left join pessoas on pessoas.id = taxas.cliente_id
+                            where date(taxas.dt_taxa) >= '{data_inicio}' AND date(taxas.dt_taxa) <= '{data_fim}'
+                            group by taxas.cliente_id
+                            order by cliente_id""")
+                        context['taxas'] = cursor.fetchall()
+                    tbody = ""
+                    for resultado in context['taxas']:
+                        cliente_id = resultado[0]
+                        nome = resultado[1]
+                        valores_diarios = resultado[2:-1]
+                        total_taxas = resultado[-1]
+                        linha = f"""
+                        <tr>
+                            <td>{cliente_id}</td>
+                            <td>{nome}</td>
+                        """
+                        for dia in valores_diarios:
+                            linha += f"<td>{dia}</td>"
+                        linha += f"<td>{total_taxas}</td></tr>"
+                        tbody += linha
+                    context['tbody'] = tbody
+                    
+        elif load_template == 'tbl_repasse_retido.html':
+            if request.method == 'POST':
+                if 'novo-repasse-retido' in request.POST:
+                    cliente_id = request.POST.get('cliente')
+                    valor = request.POST.get('valor')
+                    data_repasse_retido = request.POST.get('data-repasse-retido')
+                    tipo = request.POST.get('tipo')
+                    try:
+                        cliente = Pessoas.objects.get(id=cliente_id)
+                        RepasseRetido.objects.create(cliente=cliente, vlr_rep_retido=valor, dt_rep_retido=data_repasse_retido, tipo=tipo)
+                    except Pessoas.DoesNotExist:
+                        return HttpResponse("Cliente não encontrado")
+                    except Pessoas.MultipleObjectsReturned:
+                        return HttpResponse("Mais de um cliente encontrado, {}".format(Pessoas.objects.filter(id=cliente_id)))
+                elif 'filtrar-repasse-retido' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
+                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    dias = []
+                    for dia in dias_de_consulta:
+                        dias.append(f"SUM(CASE WHEN DAY(repasse_retido.dt_rep_retido) = {dia} THEN repasse_retido.vlr_rep_retido ELSE 0 END) AS dia_{dia}")
+                    context['dias'] = dias_de_consulta
+                    with connection.cursor() as cursor:
+                        cursor.execute(f"""
+                            SELECT cliente_id, nome,
+                            {', '.join(dias)},
+                            SUM(repasse_retido.vlr_rep_retido) as total_repasse_retido
+                            from repasse_retido
+                            left join pessoas on pessoas.id = repasse_retido.cliente_id
+                            where date(repasse_retido.dt_rep_retido) >= '{data_inicio}' AND date(repasse_retido.dt_rep_retido) <= '{data_fim}'
+                            group by repasse_retido.cliente_id
+                            order by cliente_id""")
+                        context['repasse_retido'] = cursor.fetchall()
+                    tbody = ""
+                    for resultado in context['repasse_retido']:
+                        cliente_id = resultado[0]
+                        nome = resultado[1]
+                        valores_diarios = resultado[2:-1]
+                        total_repasse_retido = resultado[-1]
+                        linha = f"""
+                        <tr>
+                            <td>{cliente_id}</td>
+                            <td>{nome}</td>
+                        """
+                        for dia in valores_diarios:
+                            linha += f"<td>{dia}</td>"
+                        linha += f"<td>{total_repasse_retido}</td></tr>"
+                        tbody += linha
+                    context['tbody'] = tbody
 
         elif load_template == 'tbl_credito_cessao.html':
             pass
 
             
         elif load_template == 'tbl_mensal_bootstrap.html':
-            with connection.cursor() as cursor:
-                #! Transforma esse codigo sql em ORM
-                cursor.execute(
-                    """
-                        SELECT
-                        c.vendedor_id, 
-                        p.nome AS nome_vendedor, 
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 1 THEN cr.repasses ELSE 0 END) AS dia_1,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 2 THEN cr.repasses ELSE 0 END) AS dia_2,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 3 THEN cr.repasses ELSE 0 END) AS dia_3,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 4 THEN cr.repasses ELSE 0 END) AS dia_4,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 5 THEN cr.repasses ELSE 0 END) AS dia_5,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 6 THEN cr.repasses ELSE 0 END) AS dia_6,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 7 THEN cr.repasses ELSE 0 END) AS dia_7,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 8 THEN cr.repasses ELSE 0 END) AS dia_8,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 9 THEN cr.repasses ELSE 0 END) AS dia_9,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 10 THEN cr.repasses ELSE 0 END) AS dia_10,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 11 THEN cr.repasses ELSE 0 END) AS dia_11,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 12 THEN cr.repasses ELSE 0 END) AS dia_12,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 13 THEN cr.repasses ELSE 0 END) AS dia_13,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 14 THEN cr.repasses ELSE 0 END) AS dia_14,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 15 THEN cr.repasses ELSE 0 END) AS dia_15,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 16 THEN cr.repasses ELSE 0 END) AS dia_16,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 17 THEN cr.repasses ELSE 0 END) AS dia_17,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 18 THEN cr.repasses ELSE 0 END) AS dia_18,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 19 THEN cr.repasses ELSE 0 END) AS dia_19,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 20 THEN cr.repasses ELSE 0 END) AS dia_20,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 21 THEN cr.repasses ELSE 0 END) AS dia_21,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 22 THEN cr.repasses ELSE 0 END) AS dia_22,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 23 THEN cr.repasses ELSE 0 END) AS dia_23,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 24 THEN cr.repasses ELSE 0 END) AS dia_24,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 25 THEN cr.repasses ELSE 0 END) AS dia_25,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 26 THEN cr.repasses ELSE 0 END) AS dia_26,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 27 THEN cr.repasses ELSE 0 END) AS dia_27,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 28 THEN cr.repasses ELSE 0 END) AS dia_28,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 29 THEN cr.repasses ELSE 0 END) AS dia_29,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 30 THEN cr.repasses ELSE 0 END) AS dia_30,
-                        SUM(CASE WHEN DAY(cr.dt_credito) = 31 THEN cr.repasses ELSE 0 END) AS dia_31,
-                        SUM(cr.repasses) AS total_mes
-                    FROM 
-                        Calculo_Repasse AS cr 
-                        INNER JOIN contratos AS c ON cr.id_contrato_id = c.id 
-                        INNER JOIN pessoas AS p ON c.vendedor_id = p.id
-                    WHERE 
-                        MONTH(cr.dt_credito) = 9 AND YEAR(cr.dt_credito) = 2022 -- exemplo para fevereiro de 2022
-                    GROUP BY 
-                        c.vendedor_id, p.nome
-                    """
-                )
-                context['sql'] = cursor.fetchall()
+            pass
                 #context['repasses_retidos'] = RepasseRetido.objects.filter(dt_rep_retido__gte="2022-01-01")
                 
         elif load_template == 'tbl_debito_cessao.html':

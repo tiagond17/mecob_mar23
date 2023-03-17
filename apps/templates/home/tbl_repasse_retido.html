@@ -19,7 +19,7 @@
               <div class="col-md-12">
                 
                 <div class="page-header-title">
-                  <h5 class="m-b-10">COB</h5>
+                  <h5 class="m-b-10">Repasses Retidos</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
@@ -29,7 +29,7 @@
                     <a href="javascript:">Tabelas & Formularios</a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">COB</a>
+                    <a href="javascript:">Repasses Retidos</a>
                   </li>
                 </ul>
               </div>
@@ -40,80 +40,54 @@
         <div class="col-xl-12">
           <div class="card">
             <div class="card-header">
-              <h5>COB</h5>
-              {% comment %} <form action="" method="post">
+              <h5>Repasse Retido</h5>
+              <form action="" method="post">
                 {% csrf_token %}
-                <p>filtrar de 
-                  <input type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
-                   até 
-                  <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
-                  <button class="btn btn-primary">Filtrar</button> 
-                  <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
+                <p>
+                  filtrar de
+                  <input
+                    type="date"
+                    name="data-inicio"
+                    id="data-inicio"
+                  />
+                  até
+                  <input type="date" name="data-fim" id="data-fim" />
+                  <button class="btn btn-primary" type="submit" name="filtrar-repasse-retido">Filtrar</button>
+                  <button
+                    type="button"
+                    name=""
+                    id=""
+                    class="btn btn-danger"
+                  >
+                    Limpar Filtro
+                  </button>
                 </p>
-              </form> {% endcomment %}
+              </form>
+              <form method="POST" class="form w-100">
+                {% csrf_token %}
+                <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
+                <input required type="number" name="valor" class="form-control" placeholder="Valor do Repasse Retido">
+                <input required type="date" name="data-repasse-retido" class="form-control" id="data-taxa" placeholder="Data do Repasse Retido">
+                <input type="text" name="tipo" class="form-control" placeholder="Tipo do Repasse Retido">
+                <button class="btn btn-success" type="submit" name="novo-repasse-retido">Novo Repasse Retido</button>
+              </form>
             </div>
-            
+
             <div class="card-block table-border-style">
-              <form method="post">
-                {% csrf_token %}
-                data inicio <input type="date" id="data_inicio" name="data_inicio" required>
-                data fim <input type="date" id="data_fim" name="data_fim" required>
-                <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
-                <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
-              </form>
-              <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_cob' %}" role="button">Exportar Consulta .xlsx</a>
-              <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
-                <button type="submit" class="btn btn-success">Enviar Planilha</button>
-              </form>
               <div class="table-responsive">
-                <table id="table-cob" class="table table-hover">
+                <table class="table table-hover" id="table-repasse-retido">
                   <thead>
                     <tr>
-                      <th>Contrato Parcela ID</th>
-                      <th>Vendedor</th>
-                      <th>Comprador</th>
-                      <th>N° Parcela</th>
-                      <th>Valor Parcela</th>
-                      <th>Data Vencimento</th>
-                      <th>Data Credito</th>
-                      <th>Banco</th>
-                      <th>Evento</th>
-                      <th>Produto</th>
-                      <th>Deposito</th>
-                      <th>Calculo</th>
-                      <th>Taxas</th>
-                      <th>ADI</th>
-                      <th>ME</th>
-                      <th>OP</th>
-                      <th>Repasses</th>
-                      <th>Comissao</th>
+                      <th>Cliente ID</th>
+                      <th>Nome</th>
+                      {% for dia in dias %}
+                      <th>Dia {{dia}}</th>
+                      {% endfor %}
+                      <th>Total Taxa</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {% for querie in sql %}
-                    <tr>
-                      <th>{{querie.0}}</th>
-                      <th>{{querie.1}}</th>
-                      <td>{{querie.2}}</td>
-                      <td>{{querie.3}}</td>
-                      <td>{{querie.4}}</td>
-                      <td>{{querie.5}}</td>
-                      <td>{{querie.6}}</td>
-                      <td>{{querie.7}}</td>
-                      <td>{{querie.8}}</td>
-                      <td>{{querie.9}}</td>
-                      <td>{{querie.10}}</td>
-                      <td>{{querie.11}}</td>
-                      <td>{{querie.12}}</td>
-                      <td>{{querie.13}}</td>
-                      <td>{{querie.14}}</td>
-                      <td>{{querie.15}}</td>
-                      <td>{{querie.16}}</td>
-                      <td>{{querie.17}}</td>
-                    </tr>
-                    {% endfor %}
+                    {{tbody|safe}}
                   </tbody>
                 </table>
               </div>
@@ -132,8 +106,7 @@
 {% block javascripts %}
 <script>
   $(document).ready(function(){
-    $('#table-cad-cliente').DataTable();
-    $('#table-cob').DataTable();
+    $('#table-repasse-retido').DataTable();
   })
 </script>
 {% endblock javascripts %}

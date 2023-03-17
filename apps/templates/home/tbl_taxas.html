@@ -19,7 +19,7 @@
               <div class="col-md-12">
                 
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Debito</h5>
+                  <h5 class="m-b-10">Taxa</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
@@ -29,7 +29,7 @@
                     <a href="javascript:">Tabelas & Formularios</a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Debito</a>
+                    <a href="javascript:">Taxa</a>
                   </li>
                 </ul>
               </div>
@@ -40,7 +40,7 @@
         <div class="col-xl-12">
           <div class="card">
             <div class="card-header">
-              <h5>Debito</h5>
+              <h5>Taxas</h5>
               <form action="" method="post">
                 {% csrf_token %}
                 <p>
@@ -52,7 +52,7 @@
                   />
                   até
                   <input type="date" name="data-fim" id="data-fim" />
-                  <button class="btn btn-primary" type="submit" name="filtrar-debito">Filtrar</button>
+                  <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
                   <button
                     type="button"
                     name=""
@@ -65,11 +65,11 @@
               </form>
               <form method="POST" class="form w-100">
                 {% csrf_token %}
-                <input required type="text" name="credor" class="form-control" placeholder="ID do Pagador">
-                <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Debitado">
-                <input required type="date" name="data-credito" class="form-control" id="data-credito" placeholder="Data a ser creditada">
-                <input type="descricao" name="descricao" class="form-control" placeholder="Descrição do Debito">
-                <button class="btn btn-danger" type="submit" name="novo-credito">Novo Debito</button>
+                <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
+                <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Taxado">
+                <input required type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
+                <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
+                <button class="btn btn-warning" type="submit" name="nova-taxa">Nova Taxa</button>
               </form>
             </div>
 
@@ -79,11 +79,11 @@
                   <thead>
                     <tr>
                       <th>Cliente ID</th>
-                      <th>Nome do Pagador</th>
+                      <th>Nome</th>
                       {% for dia in dias %}
                       <th>Dia {{dia}}</th>
                       {% endfor %}
-                      <th>Total Debito</th>
+                      <th>Total Taxa</th>
                     </tr>
                   </thead>
                   <tbody>
