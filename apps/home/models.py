@@ -224,3 +224,5 @@ class Dado(models.Model):
 
     def get_absolute_url(self):
         return reverse("Dado_detail", kwargs={"pk": self.pk})
+
+

@@ -736,20 +736,45 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                     if linhas_nulas == 2:
                         break
                     continue
-                #TODO: Substituir cada posição do row por uma variavel com um nome mais significativo
+                codigo_vendedor = row[0]
+                contrato_id = row[1]
+                nome_vendedor = row[2]
+                nome_comprador = row[3]
+                parcela_paga = row[4]
+                contrato_parcelas = row[5]
+                valor_parcela = row[6]
+                dt_vencimento = row[7]#dia/mes/ando
+                """ dt_vencimento_dt = datetime.combine(date(day=dt_vencimento.day, 
+                    month=dt_vencimento.month, 
+                    year=dt_vencimento.year), datetime.min.time()) """
+                dt_credito = row[8]
+                """ dt_credito_dt = datetime.combine(date(day=dt_credito.day,
+                    month=dt_credito.month,
+                    year=dt_credito.year), datetime.min.time()) """
+                banco = row[9]
+                produto_ou_contrato = row[10]
+                evento = row[11]
+                deposito = row[12]
+                calc = row[13]
+                taxas = row[14]
+                adi = row[15]
+                me = row[16]
+                op = row[17]
+                repasses = row[18]
+                comissao = row[19]
                 try:
-                    vendedor = Pessoas.objects.get(id=row[0])
+                    vendedor = Pessoas.objects.get(id=codigo_vendedor)
                 except Pessoas.DoesNotExist:
-                    vendedor = Pessoas.objects.create(id=row[0], nome=row[2], email=f"{row[0]}_{row[2]}@gmail.com")
+                    vendedor = Pessoas.objects.create(id=codigo_vendedor, nome=nome_vendedor, email=f"{row[0]}_{row[2]}@gmail.com")
                 except Pessoas.MultipleObjectsReturned:
-                    erros.append(f"O vendedor {row[2]} possui mais de um cadastro. linha: {linha}")
+                    erros.append(f"O vendedor {nome_vendedor} possui mais de um cadastro. linha: {linha}")
                     continue
                 try:
-                    comprador = Pessoas.objects.get(nome=row[3])
+                    comprador = Pessoas.objects.get(nome=nome_comprador)
                 except Pessoas.DoesNotExist:
-                    comprador = Pessoas.objects.create(nome=row[3], email=f"{row[3]}@gmail.com")
+                    comprador = Pessoas.objects.create(nome=nome_comprador, email=f"{nome_comprador}@gmail.com")
                 except Pessoas.MultipleObjectsReturned or Exception as e:
-                    erros.append(f"O comprador {row[3]} possui mais de um cadastro. linha: {linha}")
+                    erros.append(f"O comprador {nome_comprador} possui mais de um cadastro. linha: {linha}")
                     continue
                     
                 if row[1] is not None and type(row[1]) == int:
@@ -759,23 +784,18 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                     else:
                         try:
                             contratos = Contratos.objects.get(id=row[1])
-                            try:
-                                eventos = Eventos.objects.get(id=contratos.eventos.id)
-                                eventos.nome = row[11]
-                                eventos.save()
-                            except Eventos.DoesNotExist:
-                                eventos = Eventos.objects.create(nome=row[11], leiloeiro=pessoa_nula)
-                                eventos.save()
-                            #TODO: Discutir com tiago se pode deixar o usuario alterar o vendedor e comprador do contrato e tambem os id's
-                            contratos.descricao = row[10]
+                            eventos = Eventos.objects.get(id=contratos.eventos.id)
+                            eventos.nome = evento
                             contratos.eventos = eventos
+                            contratos.descricao = produto_ou_contrato
+                            eventos.save()
+                            contratos.save()
                         except Contratos.DoesNotExist:
-                            eventos = Eventos.objects.create(nome=row[11], leiloeiro=Pessoas.objects.get(id=99999),
+                            eventos = Eventos.objects.create(nome=evento, leiloeiro=Pessoas.objects.get(id=99999),
                                 dt_evento=date.today(), tipo="qualquer")
-                            contratos = Contratos.objects.create(id=row[1],
+                            contratos = Contratos.objects.create(id=contrato_id,
                                 vendedor=vendedor, comprador=comprador,
                                 descricao=row[10], eventos=eventos, pessoas_id_inclusao=pessoa_nula)
-                            contratos.save()
                 else:
                     erros.append(f"O contrato {row[1]} não existe para o comprador: {row[3]} e vendedor: {row[2]}. linha: {linha}")
                     continue
@@ -793,7 +813,6 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                         dt_vencimento=row[7], vl_parcela=row[6], dt_credito=row[8],
                         nu_parcela=int(str(row[5].split('/')[0][1:]))
                     )
-                    contrato_parcelas.save()
                 except ContratoParcelas.MultipleObjectsReturned:
                     erros.append(f"O contrato {contratos.id} possui mais de uma parcela com o numero {row[5]}. linha: {linha}")
                     #!chances muito poucas de acontecer, mas se acontecer, o sistema vai pegar o primeiro objeto
@@ -815,7 +834,6 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                         deposito=row[12], calculo=row[13], taxas=row[14], adi=row[15],
                         me=row[16], op=row[17], repasses=row[18], comissao=row[19], dt_credito=contrato_parcelas.dt_credito
                     )
-                    calculo_repasse.save()
                     
                 linha += 1
             return HttpResponse('Planilha de cavalos recebida com sucesso, linhas lidas: {}, erros: {}'.format(linha,erros))
@@ -892,6 +910,9 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             vendedor_nome = row[2]
             parcela = row[3]# (1/2), pegar o primeiro digito antes da barra
             vencimento = row[4] #14/01/2023, dia 14 mes 01 ano 2023
+            dt_vencimento = date(day=vencimento.day, month=vencimento.month, year=vencimento.year)
+            dt_vencimento = datetime.combine(dt_vencimento, datetime.min.time())
+
             valor = row[5]
             tcc = row[6]
             ted = row[7]
@@ -904,14 +925,14 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 comprador = Pessoas.objects.create(nome=comprador_nome, email=f"{comprador_nome}-email@nãoexiste.com.br")
             except Pessoas.MultipleObjectsReturned:
                 erros.append(f"Erro na linha {linhas}, comprador {comprador_nome} possui mais de um cadastro")
-            Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=vencimento)
+            Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=dt_vencimento)
             try:
                 vendedor = Pessoas.objects.get(nome=vendedor_nome)
             except Pessoas.DoesNotExist:
                 vendedor = Pessoas.objects.create(nome=vendedor_nome, email=f"{vendedor_nome}-email@nãoexiste.com.br")
             except Pessoas.MultipleObjectsReturned:
                 erros.append(f"Erro na linha {linhas}, vendedor {vendedor_nome} possui mais de um cadastro")
-            Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=vencimento)
+            Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
