@@ -61,16 +61,17 @@
                 <table id="table-cob" class="table table-hover">
                   <thead>
                     <tr>
-                      <th>Contrato Parcela ID</th>
+                      <th>Vendedor ID</th>
+                      <th>Contrato ID</th>
                       <th>Vendedor</th>
                       <th>Comprador</th>
-                      <th>N° Parcela</th>
-                      <th>Valor Parcela</th>
+                      <th>Nu parcela</th>
+                      <th>Contrato</th>
+                      <th>Valor Pago</th>
                       <th>Data Vencimento</th>
                       <th>Data Credito</th>
                       <th>Banco</th>
                       <th>Evento</th>
-                      <th>Produto</th>
                       <th>Deposito</th>
                       <th>Calculo</th>
                       <th>Taxas</th>
@@ -79,12 +80,13 @@
                       <th>OP</th>
                       <th>Repasses</th>
                       <th>Comissao</th>
+                      <th>Parcelas Contrato</th>
+                      <th>Total Repasses</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for querie in sql %}
                     <tr>
-                      <th>{{querie.0}}</th>
                       <th>{{querie.1}}</th>
                       <td>{{querie.2}}</td>
                       <td>{{querie.3}}</td>
@@ -102,6 +104,10 @@
                       <td>{{querie.15}}</td>
                       <td>{{querie.16}}</td>
                       <td>{{querie.17}}</td>
+                      <td>{{querie.18}}</td>
+                      <td>{{querie.19}}</td>
+                      <td>{{querie.20}}</td>
+                      <td>{{querie.21}}</td>
                     </tr>
                     {% endfor %}
                   </tbody>

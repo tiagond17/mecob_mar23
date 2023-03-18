@@ -46,32 +46,13 @@ def index(request):
 def preencher_tabela_cob(data_inicio, data_fim):
     with connection.cursor() as cursor:
         cursor.execute(f"""
-select cp.contratos_id as id_parcela_contratos,
-case when not isnull(pessoa_vendedor.nome) then pessoa_vendedor.nome else 'boleto avulso' end as vendedor,
-case when not isnull(pessoa_comprador.nome) then pessoa_comprador.nome else 'Comprador não localizado' end as comprador,
-cp.nu_parcela as nu_parcela,
-cp.vl_parcela as vl_parcela,
-cp.dt_vencimento as dt_vencimento,
-cp.dt_credito as dt_credito,
-case when cp.contratos_id > 12460 or isnull(cp.contratos_id) then 'UNICRED' else 'BRADESCO' end as banco,
-eventos.nome,
-co.descricao as produto,
-cr.deposito,
-cr.calculo,
-cr.taxas,
-cr.adi,
-cr.me,
-cr.op,
-cr.repasses,
-cr.comissao
-from contrato_parcelas as cp
-left join contratos as co on cp.contratos_id = co.id
-left join pessoas as pessoa_comprador on pessoa_comprador.id = co.comprador_id
-left join pessoas as pessoa_vendedor on pessoa_vendedor.id = co.vendedor_id
-left join calculo_repasse as cr on cr.contrato_parcelas_id = cp.id
-left join eventos as eventos on eventos.id = co.eventos_id
-where cp.dt_credito BETWEEN '{data_inicio}' and '{data_fim}'
-ORDER BY cp.dt_credito ASC
+select
+*,
+sum(dado.repasses) as total_repasse
+from dado
+
+where dado.dt_credito between "{data_inicio}" and "{data_fim}"
+group by dado.id_vendedor
 """)
         result = cursor.fetchall()
         return result
@@ -519,62 +500,47 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
 
         dias = []
         for dia in dias_de_consulta:
-            dias.append(f"SUM(CASE WHEN DAY(cr.dt_credito) = {dia} THEN cr.repasses ELSE 0 END) AS dia_{dia}")
+            dias.append(f"SUM(CASE WHEN DAY(dado.dt_credito) = {dia} THEN dado.repasses ELSE 0 END) AS dia_{dia}")
             
         consulta = f"""
-        SELECT
-            c.vendedor_id,
-            p.nome AS nome_vendedor,
-            COALESCE(repasse_retido.vlr_rep_retido, 0) as vlr_rep_retido,
-            {', '.join(dias)},
-            COALESCE(credito.vl_credito, 0) as vl_credito,
-            COALESCE(debito.vl_debito, 0) as vl_debito,
-            COALESCE(taxas.taxas, 0) as taxas,
-            SUM(cr.repasses)
-                + COALESCE(repasse_retido.vlr_rep_retido,0)
-                - COALESCE(debito.vl_debito, 0)
-                - COALESCE(taxas.taxas, 0)
-                + COALESCE(credito.vl_credito, 0)
-                AS total_repasses
-        FROM
-            calculo_repasse AS cr
-            INNER JOIN contrato_parcelas AS cp ON cr.contrato_parcelas_id = cp.id
-            INNER JOIN contratos AS c ON cp.contratos_id = c.id
-            INNER JOIN pessoas AS p ON c.vendedor_id = p.id
-            LEFT JOIN (
-            SELECT cliente_id, SUM(vl_credito) AS vl_credito 
-            FROM credito
-            WHERE dt_creditado BETWEEN '{data_inicio}' AND '{data_fim}'
-            GROUP BY cliente_id
-        )
-        AS credito ON credito.cliente_id = c.vendedor_id
-        LEFT JOIN (
-            SELECT cliente_id, SUM(vl_debito) AS vl_debito
-            FROM debito
-            WHERE dt_debitado BETWEEN '{data_inicio}' AND '{data_fim}'
-            GROUP BY cliente_id
-        )
-        AS debito ON debito.cliente_id = c.vendedor_id
-        LEFT JOIN (
-            SELECT cliente_id, SUM(taxas) as taxas
-            FROM taxas
-            WHERE dt_taxa BETWEEN '{data_inicio}' AND '{data_fim}'
-            GROUP BY cliente_id
-        )
-        as taxas on taxas.cliente_id = c.vendedor_id
-        LEFT JOIN (
-            SELECT cliente_id, SUM(vlr_rep_retido) as vlr_rep_retido
-            from repasse_retido
-            WHERE dt_rep_retido BETWEEN '{data_inicio}' AND '{data_fim}'
-            group by cliente_id
-        )
-        as repasse_retido on repasse_retido.cliente_id = c.vendedor_id
-        WHERE
-            cr.dt_credito BETWEEN '{data_inicio}' AND '{data_fim}'
-        GROUP BY
-            c.vendedor_id, p.nome
-        ORDER BY
-            c.vendedor_id
+        select
+dado.id_vendedor,
+dado.vendedor,
+coalesce(total_repasse_retido,0) as total_repasse_retido,
+{', '.join(dias)},
+coalesce(total_credito,0) as total_credito,
+coalesce(total_debito,0) as total_debito,
+coalesce(total_taxas,0) as total_taxas,
+sum(dado.repasses)
+	+ coalesce(total_repasse_retido, 0)
+    + coalesce(total_credito, 0)
+    - coalesce(total_debito, 0)
+    - coalesce(total_taxas, 0)
+    as total_repasse
+from dado
+left join (
+	select sum(vl_credito) as total_credito, cliente_id
+    from credito
+    where credito.dt_creditado between "{data_inicio}" and "{data_fim}"
+) as credito on credito.cliente_id = dado.id_vendedor
+left join (
+	select sum(vl_debito) as total_debito, cliente_id
+    from debito
+    where debito.dt_debitado between "{data_inicio}" and "{data_fim}"
+) as debito on debito.cliente_id = dado.id_vendedor
+left join (
+	select sum(taxas) as total_taxas, cliente_id
+    from taxas
+    where taxas.dt_taxa between "{data_inicio}" and "{data_fim}"
+) as taxas on taxas.cliente_id = dado.id_vendedor
+left join (
+	select sum(vlr_rep_retido) as total_repasse_retido, cliente_id
+    from repasse_retido
+    where repasse_retido.dt_rep_retido between "{data_inicio}" and "{data_fim}"
+) as repasse_retido on repasse_retido.cliente_id = dado.id_vendedor
+where date(dado.dt_credito) BETWEEN '{data_inicio}' AND '{data_fim}'
+group by dado.id_vendedor
+order by dado.id_vendedor
         """
     
         with connection.cursor() as cursor:
