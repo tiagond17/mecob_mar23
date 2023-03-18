@@ -52,7 +52,7 @@ sum(dado.repasses) as total_repasse
 from dado
 
 where dado.dt_credito between "{data_inicio}" and "{data_fim}"
-group by dado.id_vendedor
+group by dado.id_contrato
 """)
         result = cursor.fetchall()
         return result
@@ -522,21 +522,25 @@ left join (
 	select sum(vl_credito) as total_credito, cliente_id
     from credito
     where credito.dt_creditado between "{data_inicio}" and "{data_fim}"
+    group by cliente_id
 ) as credito on credito.cliente_id = dado.id_vendedor
 left join (
 	select sum(vl_debito) as total_debito, cliente_id
     from debito
     where debito.dt_debitado between "{data_inicio}" and "{data_fim}"
+    group by cliente_id
 ) as debito on debito.cliente_id = dado.id_vendedor
 left join (
 	select sum(taxas) as total_taxas, cliente_id
     from taxas
     where taxas.dt_taxa between "{data_inicio}" and "{data_fim}"
+    group by cliente_id
 ) as taxas on taxas.cliente_id = dado.id_vendedor
 left join (
 	select sum(vlr_rep_retido) as total_repasse_retido, cliente_id
     from repasse_retido
     where repasse_retido.dt_rep_retido between "{data_inicio}" and "{data_fim}"
+    group by cliente_id
 ) as repasse_retido on repasse_retido.cliente_id = dado.id_vendedor
 where date(dado.dt_credito) BETWEEN '{data_inicio}' AND '{data_fim}'
 group by dado.id_vendedor
@@ -866,7 +870,7 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
         wb = openpyxl.load_workbook(planilha)
         segunda_quinzena = wb.active
         for row in segunda_quinzena.iter_rows(values_only=True):
-            if linhas < 2:
+            if linhas < 1:
                 linhas += 1
                 continue
             if row[0] == None or row[0] == '':
@@ -886,19 +890,22 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             hon = row[9]
             repasse = row[10]
             try:
-                comprador = Pessoas.objects.get(nome=comprador_nome)
-            except Pessoas.DoesNotExist:
-                comprador = Pessoas.objects.create(nome=comprador_nome, email=f"{comprador_nome}-email@nãoexiste.com.br")
-            except Pessoas.MultipleObjectsReturned:
-                erros.append(f"Erro na linha {linhas}, comprador {comprador_nome} possui mais de um cadastro")
-            Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=dt_vencimento)
-            try:
-                vendedor = Pessoas.objects.get(nome=vendedor_nome)
-            except Pessoas.DoesNotExist:
-                vendedor = Pessoas.objects.create(nome=vendedor_nome, email=f"{vendedor_nome}-email@nãoexiste.com.br")
-            except Pessoas.MultipleObjectsReturned:
-                erros.append(f"Erro na linha {linhas}, vendedor {vendedor_nome} possui mais de um cadastro")
-            Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
+                try:
+                    comprador = Pessoas.objects.get(nome=comprador_nome)
+                except Pessoas.DoesNotExist:
+                    comprador = Pessoas.objects.create(nome=comprador_nome, email=f"{comprador_nome}-email@nãoexiste.com.br")
+                except Pessoas.MultipleObjectsReturned:
+                    erros.append(f"Erro na linha {linhas}, comprador {comprador_nome} possui mais de um cadastro")
+                Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=dt_vencimento)
+                try:
+                    vendedor = Pessoas.objects.get(nome=vendedor_nome)
+                except Pessoas.DoesNotExist:
+                    vendedor = Pessoas.objects.create(nome=vendedor_nome, email=f"{vendedor_nome}-email@nãoexiste.com.br")
+                except Pessoas.MultipleObjectsReturned:
+                    erros.append(f"Erro na linha {linhas}, vendedor {vendedor_nome} possui mais de um cadastro")
+                Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
+            except Exception as e:
+                erros.append(f"Erro na linha {linhas}, {e}")
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
@@ -921,6 +928,7 @@ def upload_planilha_dados_brutos(request):
                 continue
             if (row[0] == None or row[0] == '') and (row[1] == None or row[1] == ''):
                 break
+            linhas += 1
             vendedor_id = row[0]
             contrato_id = row[1]
             nome_vendedor = row[2]
@@ -941,6 +949,7 @@ def upload_planilha_dados_brutos(request):
             op = row[17]
             repasses = row[18]
             comissao = row[19]
+            id_excel = row[21]
             try:
                 Dado.objects.create(
                 id_vendedor=vendedor_id,
@@ -948,7 +957,7 @@ def upload_planilha_dados_brutos(request):
                 vendedor=nome_vendedor,
                 comprador=comprador,
                 nu_parcela=parcela_paga,
-                parcelas_contrato=int(parcelas_contrato.split('/')[0][1:]),#(1/2) :str, pegar somente o primeiro digte antes da barra
+                parcelas_contrato=parcelas_contrato,#(1/2) :str, pegar somente o primeiro digte antes da barra
                 vl_pago=valor,
                 dt_vencimento=data_vencimento,
                 dt_credito=data_credito,
@@ -962,12 +971,13 @@ def upload_planilha_dados_brutos(request):
                 me=me,
                 op=op,
                 repasses=repasses,
-                comissao=comissao
+                comissao=comissao,
+                id_excel=id_excel
             )
             except Exception as e:
                 print('Erro na linha {}, {}'.format(linhas, e))
                 continue
             
 
-        return HttpResponse("Funcionando o o post")
-    return HttpResponse("Funcionando")
+        return HttpResponse("Planilha recebida com sucesso")
+    return HttpResponse("HTTP REQUEST")

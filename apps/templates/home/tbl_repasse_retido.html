@@ -66,7 +66,7 @@
               <form method="POST" class="form w-100">
                 {% csrf_token %}
                 <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-                <input required type="number" name="valor" class="form-control" placeholder="Valor do Repasse Retido">
+                <input required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor do Repasse Retido">
                 <input required type="date" name="data-repasse-retido" class="form-control" id="data-taxa" placeholder="Data do Repasse Retido">
                 <input type="text" name="tipo" class="form-control" placeholder="Tipo do Repasse Retido">
                 <button class="btn btn-success" type="submit" name="novo-repasse-retido">Novo Repasse Retido</button>
