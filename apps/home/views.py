@@ -24,7 +24,7 @@ from openpyxl.utils import get_column_letter
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido
+from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -936,3 +936,72 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
+
+def upload_planilha_dados_brutos(request):
+    if request.method == "POST":
+        if request.FILES.get('docpicker') is None:
+            return HttpResponse("Nenhum arquivo selecionado")
+        if not request.FILES.get('docpicker').name.endswith('.xlsx'):
+            return HttpResponse("Arquivo não é do tipo xlsx")
+        planilha = request.FILES.get('docpicker')
+        wb = openpyxl.load_workbook(planilha)
+        cob = wb.active
+        linhas_nulas = 0
+        linhas = 0
+        erros:list[str] = []
+        for row in cob.iter_rows(values_only=True):
+            if linhas < 1:
+                linhas += 1
+                continue
+            if (row[0] == None or row[0] == '') and (row[1] == None or row[1] == ''):
+                break
+            vendedor_id = row[0]
+            contrato_id = row[1]
+            nome_vendedor = row[2]
+            comprador = row[3]
+            parcela_paga = row[4]
+            parcelas_contrato = row[5]
+            valor = row[6]
+            data_vencimento = row[7]
+            data_credito = row[8]
+            banco = row[9]
+            contrato = row[10]
+            evento = row[11]
+            deposito = row[12]
+            calc = row[13]
+            taxas = row[14]
+            adi = row[15]
+            me = row[16]
+            op = row[17]
+            repasses = row[18]
+            comissao = row[19]
+            try:
+                Dado.objects.create(
+                id_vendedor=vendedor_id,
+                id_contrato=contrato_id,
+                vendedor=nome_vendedor,
+                comprador=comprador,
+                nu_parcela=parcela_paga,
+                parcelas_contrato=int(parcelas_contrato.split('/')[0][1:]),#(1/2) :str, pegar somente o primeiro digte antes da barra
+                vl_pago=valor,
+                dt_vencimento=data_vencimento,
+                dt_credito=data_credito,
+                banco=banco,
+                contrato=contrato,
+                evento=evento,
+                deposito=deposito,
+                calculo=calc,
+                taxas=taxas,
+                adi=adi,
+                me=me,
+                op=op,
+                repasses=repasses,
+                comissao=comissao
+            )
+            except Exception as e:
+                print('Erro na linha {}, {}'.format(linhas, e))
+                continue
+            
+
+        return HttpResponse("Funcionando o o post")
+    return HttpResponse("Funcionando")
