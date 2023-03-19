@@ -118,20 +118,33 @@ def pages(request):
                         group by contratos.vendedor_id
                     """)
                     context['repasses'] = cursor.fetchall()
-                    context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                        banco='UNICRED').aggregate(
-                            valores_pagos=Sum('vl_pago'),
-                            honorarios=Sum('me')
-                        )
-                    context['comissionistas_do_mes'] = Dado.objects.filter(
-                        dt_credito=data,comissao__isnull=False
-                        ).values('comissao').annotate(comissoes=Sum('op'))
-                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
-                        repasses=Sum('repasses')
+                    cursor.execute(f"""
+                        select vendedor_id, pessoas.nome, total_repasses
+                        from cad_cliente
+                        left join pessoas on pessoas.id = vendedor_id
+                        left join (
+                            select id_vendedor, sum(coalesce(repasses,0)) as total_repasses
+                            from dado
+                            where dado.dt_credito = "{data}"
+                            group by dado.id_vendedor
+                        ) as dado on dado.id_vendedor = cad_cliente.vendedor_id
+                        where repasse_semanal = true""")
+                    context['repasses_semanais'] = cursor.fetchall()
+                    
+                context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
+                    banco='UNICRED').aggregate(
+                        valores_pagos=Sum('vl_pago'),
+                        honorarios=Sum('me')
                     )
+                context['comissionistas_do_mes'] = Dado.objects.filter(
+                    dt_credito=data,comissao__isnull=False
+                    ).values('comissao').annotate(comissoes=Sum('op'))
+                context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
+                    repasses=Sum('repasses')
+                )
+                context['repasses_semanais_vendedores_totais'] = sum([(querie[2] or 0) for querie in context['repasses_semanais']])
+                context['repasses_gera_descontado'] = (context['repasses_geral']['repasses'] or 0) - (context['repasses_semanais_vendedores_totais'] or 0)
                     #context['repasses_geral'] = sum([float(calculo_repase.repasses) for calculo_repase in Calculo_Repasse.objects.filter(dt_credito=data, banco=bancos)])
-        
-            
 
             
         elif load_template == 'form_elements.html':
@@ -141,7 +154,6 @@ def pages(request):
                 context['sql'] = preencher_tabela_cob(
                     data_inicio=data_inicio, data_fim=data_fim)
                 request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
-            #!context['cad_clientes'] = CadCliente.objects.all()
         
         elif load_template == 'tbl_credito.html':
             if request.method == 'POST':
@@ -348,14 +360,6 @@ def pages(request):
                         linha += f"<td>{total_repasse_retido}</td></tr>"
                         tbody += linha
                     context['tbody'] = tbody
-
-        elif load_template == 'tbl_credito_cessao.html':
-            pass
-
-            
-        elif load_template == 'tbl_mensal_bootstrap.html':
-            pass
-                #context['repasses_retidos'] = RepasseRetido.objects.filter(dt_rep_retido__gte="2022-01-01")
                 
         elif load_template == 'tbl_debito_cessao.html':
             if request.method == 'POST':
@@ -952,6 +956,13 @@ def upload_planilha_dados_brutos(request):
             repasses = row[18]
             comissao = row[19]
             id_excel = row[21]
+            
+            """ try:
+                Dado.objects.get(id_vendedor=id)
+            except:
+                pass
+                 """
+            
             try:
                 Dado.objects.create(
                 id_vendedor=vendedor_id,

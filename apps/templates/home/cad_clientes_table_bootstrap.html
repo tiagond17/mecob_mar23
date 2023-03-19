@@ -61,13 +61,14 @@
                             <th>Animal</th>
                             <th>Evento</th>
                             <th>Informar Repasse</th>
+                            <th>Repasse Semanal</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for cad_cliente in cad_clientes %}
                           <tr>
-                            <th>{{ cad_cliente.id }}</th>
-                            <td>{{ cad_cliente.nome }}</td>
+                            <th>{{ cad_cliente.vendedor.id }}</th>
+                            <td>{{ cad_cliente.vendedor.nome }}</td>
                             <td>{{ cad_cliente.codigo }}</td>
                             <td>{{ cad_cliente.sim }}</td>
                             <td>{{ cad_cliente.nao }}</td>
@@ -77,6 +78,7 @@
                             <td>{{ cad_cliente.animal }}</td>
                             <td>{{ cad_cliente.evento }}</td>
                             <td>{{ cad_cliente.informar_repasse }}</td>
+                            <td>{{ cad_cliente.repasse_semanal }}</td>
                           {% endfor %}
                           {% comment %} 
                           <tr>

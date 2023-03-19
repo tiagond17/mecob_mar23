@@ -29,6 +29,7 @@ class CadCliente(models.Model):
     animal = models.CharField(_(""), max_length=256, blank=True, null=True)
     evento = models.CharField(_(""), max_length=256, blank=True, null=True)
     informar_repasse = models.CharField(_(""), max_length=50, blank=True, null=True)
+    repasse_semanal = models.BooleanField(_(""), default=False, blank=True, null=True)
 
 
     class Meta:

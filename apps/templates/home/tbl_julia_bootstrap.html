@@ -98,6 +98,7 @@
                   </div>
                   <div class="card-block table-border-style">
                     <h5>Comissionistas do Mês</h5>
+                    {{repasses_semanal}}
                     <div class="table-responsive">
                       <table class="table table-hover" id="table-julia">
                         <thead>
@@ -116,9 +117,31 @@
                         </tbody>
                       </table>
                     </div>
+                    <h4>Repasses Semanais</h4>
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-repasses-semanais">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Repasses</th>
+                            <th>Valores</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for querie in repasses_semanais %}
+                          <tr>
+                            <th>{{querie.0}}</th>
+                            <th>{{querie.1}}</th>
+                            <th>{{querie.2}}</th>
+                          </tr>
+                          {% endfor %}
+                          
+                        </tbody>
+                      </table>
+                    </div>
 
                     <br>
-                    <h5>Repasses Geral: R$ {{repasses_geral.repasses|intcomma}}</h5>
+                    <h5>Repasses Geral: R$ {{repasses_gera_descontado|intcomma}}</h5>
                   </div>
                 </div>
               </div>
@@ -141,6 +164,7 @@
   $(document).ready(function(){
     $('#table-julia').DataTable();
     $('#table-repasse').DataTable();
+    $('#table-repasses-semanais').DataTable();
   })
 </script>
 {% endblock javascripts %}
