@@ -159,62 +159,6 @@
                 </div>
               </div>
 
-              <div class="col-xl-12">
-                <div class="card">
-                  <div class="card-header">
-                    <h5>Parcelas</h5>
-                    <form action="{% url 'home:consulta_por_data' %}" method="post">
-                      {% csrf_token %}
-                      <p>filtrar de 
-                        <input  type="date" name="data-inicio" id="data-inicio" value="2022-08-01">
-                         até 
-                        <input type="date" name="data-fim" id="data-fim" value="2022-08-21"> 
-                        <button class="btn btn-primary">Filtrar</button> 
-                        <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
-                      </p>
-                    </form>
-                  </div>
-                  <div class="card-block table-border-style">
-                    <div class="table-responsive">
-                      <table class="table table-hover" id="table-parcelas">
-                        <thead>
-                          <tr>
-                            <th># N° Parcela</th>
-                            <th>Data Credito</th>
-                            <th>Valor da parcela</th>
-                            <th>Valor do Boleto</th>
-                            <th>Valor de pagamento</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                            {% for parcela in parcelas %}
-                              <tr>
-                                <th>{{parcela.nu_parcela}}</th>
-                                <td>{{parcela.dt_credito}}</td>
-                                <td>{{parcela.arquivos_id_retorno}}</td>
-                                <td>valor boleto</td>
-                                <td>valor de pagamento</td>
-                                <td>{{parcela.contratos.arquivos_contratos.first.dados_arquivo_retorno.first.vl_pago}}</td>
-                              </tr>
-                            {% endfor %}
-                          {% comment %} {% for contrato in contratos %}
-                            {% for parcela in contrato.parcelas.all|datas_validas %}
-                            <tr>
-                              <th>{{parcela.nu_parcela}}</th>
-                              <td>{{parcela.dt_credito}}</td>
-                              <td>{{parcela.vl_parcela}}</td>
-                              <td>valor boleto</td>
-                              <td>valor de pagamento</td>
-                            </tr>  
-                            {% endfor %}
-                          {% endfor %} {% endcomment %}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
             <!-- [ Main Content ] end -->
           </div>
         </div>
