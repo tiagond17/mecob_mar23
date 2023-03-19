@@ -19,15 +19,15 @@
             <div class="row align-items-center">
               <div class="col-md-12">
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Tabelas Quinzenal e Contratos</h5>
+                  <h5 class="m-b-10">Tabela para cálculo do repasse quinzenal</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
                     <a href="/"><i class="feather icon-home"></i></a>
                   </li>
-                  <li class="breadcrumb-item"><a href="#!">Tabelas & Formularios</a></li>
+                  <li class="breadcrumb-item"><a href="#!">Tabelas & Formulários</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Quinzenal e Contratos</a>
+                    <a href="javascript:">Quinzenal</a>
                   </li>
                 </ul>
               </div>
@@ -48,7 +48,7 @@
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" value="2022-09-15">
                       data fim <input required type="date" id="data-fim" name="data-fim" value="2022-09-30">
                       <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
-                      <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
+                      <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
                   </div>
                   <div class="card-block table-border-style">
@@ -124,7 +124,7 @@
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" >
                       data fim <input required type="date" id="data-fim" name="data-fim">
                       <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
-                      <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
+                      <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
                     <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a>
                     <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">

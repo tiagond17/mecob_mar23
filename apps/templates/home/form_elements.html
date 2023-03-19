@@ -19,14 +19,14 @@
               <div class="col-md-12">
                 
                 <div class="page-header-title">
-                  <h5 class="m-b-10">COB</h5>
+                  <h5 class="m-b-10">Tabela que compõe todas os repasses créditados- COB</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
                     <a href="/"><i class="feather icon-home"></i></a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Tabelas & Formularios</a>
+                    <a href="javascript:">Tabelas & Formulários</a>
                   </li>
                   <li class="breadcrumb-item">
                     <a href="javascript:">COB</a>
@@ -40,16 +40,16 @@
         <div class="col-xl-12">
           <div class="card">
             <div class="card-header">
-              <h5>COB</h5>
+              <h5>Filtre os repasses por data desejada</h5>
             </div>
             
             <div class="card-block table-border-style">
               <form method="post">
                 {% csrf_token %}
-                data inicio <input type="date" id="data_inicio" name="data_inicio" required>
-                data fim <input type="date" id="data_fim" name="data_fim" required>
+                Data Início <input type="date" id="data_inicio" name="data_inicio" required>
+                Data Fim <input type="date" id="data_fim" name="data_fim" required>
                 <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
-                <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar Campos</button>
+                <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
               </form>
               <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_cob' %}" role="button">Exportar Consulta .xlsx</a>
               <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
@@ -73,7 +73,7 @@
                       <th>Banco</th>
                       <th>Evento</th>
                       <th>Deposito</th>
-                      <th>Calculo</th>
+                      <th>Cálculo</th>
                       <th>Taxas</th>
                       <th>ADI</th>
                       <th>ME</th>
