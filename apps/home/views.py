@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.shortcuts import render
 from django.db import connection
 from django.conf import settings
+from django.db.models import Sum
 import random
 #importe letras
 import tempfile
@@ -90,20 +91,12 @@ def pages(request):
 
         elif load_template == 'cad_clientes_table_bootstrap.html':
             context['cad_clientes'] = CadCliente.objects.all()
-            pass
             
         elif load_template == 'tbl_julia_bootstrap.html':
             if request.method == 'POST':
                 bancos = request.POST.get('bancos')
                 data = request.POST.get('data')
                 with connection.cursor() as cursor:
-                    cursor.execute(f"""
-                                select SUM(vl_pago) as valor_pago,
-                                sum(me) as honorarios
-                                from calculo_repasse
-                                where dt_credito = '{data}' and banco='{str(bancos).upper()}';
-                            """)
-                    context['valores_totais'] = cursor.fetchall()
                     cursor.execute(f"""
                         select distinct comissao as comissionista,
                         sum(op) as comissoes
@@ -125,9 +118,18 @@ def pages(request):
                         group by contratos.vendedor_id
                     """)
                     context['repasses'] = cursor.fetchall()
+                    context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
+                        banco='UNICRED').aggregate(
+                            valores_pagos=Sum('vl_pago'),
+                            honorarios=Sum('me')
+                        )
+                    context['comissionistas_do_mes'] = Dado.objects.filter(
+                        dt_credito=data,comissao__isnull=False
+                        ).values('comissao').annotate(comissoes=Sum('op'))
+                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
+                        repasses=Sum('repasses')
+                    )
                     #context['repasses_geral'] = sum([float(calculo_repase.repasses) for calculo_repase in Calculo_Repasse.objects.filter(dt_credito=data, banco=bancos)])
-                pass
-            pass
         
             
 
