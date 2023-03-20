@@ -1,20 +1,15 @@
 services:
-- type: web
-  buildCommand: pip install -r requirements.txt && python manage.py migrate
-  startCommand: python manage.py runserver
-  env: 'python'
-  plan: starter
-  name: Data-Djanto
-  envVars:
-    - key: DJANGO_SETTINGS_MODULE
-      value: core.settings
-
-staticSites:
-- buildCommand: python manage.py collectstatic --noinput
-  publicDir: staticfiles
-  name: Data-Djanto-statics
-
-routes:
-- type: rewrite
-  source: /static/(.*)
-  #destination: https://Data-Djanto-statics.onrender.com/$1
+  - type: web
+    name: django-datta
+    plan: starter
+    env: python
+    region: frankfurt  # region should be same as your database region.
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn core.wsgi:application"
+    envVars:
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4git
