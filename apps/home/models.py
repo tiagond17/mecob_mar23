@@ -197,6 +197,7 @@ e facilitar a consulta caso haja erro de dados no Calculo_Repasse"""
 class Dado(models.Model):
     id_vendedor = models.CharField(_(""), max_length=128, blank=True, null=True)
     id_contrato = models.CharField(_(""), max_length=128, blank=True, null=True)
+    id_comprador = models.CharField(_(""), max_length=128, blank=True, null=True)
     vendedor = models.CharField(_(""), max_length=100, blank=True, null=True)
     comprador = models.CharField(_(""), max_length=100, blank=True, null=True)
     nu_parcela = models.CharField(_(""), max_length=100, blank=True, null=True)

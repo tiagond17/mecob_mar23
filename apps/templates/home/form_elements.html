@@ -64,37 +64,39 @@
                       <th>Vendedor ID</th>
                       <th>Contrato ID</th>
                       <th>Vendedor</th>
+                      <th>Comprador ID</th>
                       <th>Comprador</th>
-                      <th>Nu parcela</th>
-                      <th>Contrato</th>
+                      <th>Parcelas Contrato</th>
                       <th>Valor Pago</th>
                       <th>Data Vencimento</th>
                       <th>Data Credito</th>
                       <th>Banco</th>
+                      <th>Contrato</th>
                       <th>Evento</th>
                       <th>Deposito</th>
-                      <th>Cálculo</th>
+                      <th>Calculo</th>
                       <th>Taxas</th>
                       <th>ADI</th>
                       <th>ME</th>
                       <th>OP</th>
                       <th>Repasses</th>
                       <th>Comissao</th>
-                      <th>Parcelas Contrato</th>
-                      <th>Total Repasses</th>
+                      <th>Total Repasse</th>
+                      <th>Dado ID</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for querie in sql %}
                     <tr>
+                      <th>{{querie.0}}</th>
                       <th>{{querie.1}}</th>
                       <td>{{querie.2}}</td>
                       <td>{{querie.3}}</td>
                       <td>{{querie.4}}</td>
                       <td>{{querie.5}}</td>
                       <td>{{querie.6}}</td>
-                      <td>{{querie.7}}</td>
-                      <td>{{querie.8}}</td>
+                      <td>{{querie.7|date:'d/m/y'}}</td>
+                      <td>{{querie.8|date:'d/m/y'}}</td>
                       <td>{{querie.9}}</td>
                       <td>{{querie.10}}</td>
                       <td>{{querie.11}}</td>

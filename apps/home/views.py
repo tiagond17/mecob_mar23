@@ -48,11 +48,30 @@ def preencher_tabela_cob(data_inicio, data_fim):
     with connection.cursor() as cursor:
         cursor.execute(f"""
 select
-*,
-sum(dado.repasses) as total_repasse
+dado.id_vendedor as codigo_vendedor,
+dado.id_contrato,
+dado.vendedor,
+dado.id_comprador,
+dado.comprador,
+dado.parcelas_contrato,
+dado.vl_pago,
+dado.dt_vencimento,
+dado.dt_credito,
+dado.banco,
+dado.contrato,
+dado.evento,
+dado.deposito,
+dado.calculo,
+dado.taxas,
+dado.adi,
+dado.me,
+dado.op,
+dado.repasses,
+dado.comissao,
+sum(dado.repasses) as total_repasse,
+dado.id as dado_id
 from dado
-
-where dado.dt_credito between "{data_inicio}" and "{data_fim}"
+where dado.dt_credito between "2023-02-1" and "2023-02-03"
 group by dado.id_contrato
 """)
         result = cursor.fetchall()
@@ -633,29 +652,35 @@ def download_planilha_cob(request, *args, **kwargs):
         filepath = os.path.join(tmpdir, f'planilha_consulta_cob_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
         workbook = openpyxl.Workbook()
         sheet = workbook.active
-        sheet['A1'] = 'ID Contrato'
-        sheet['B1'] = 'Vendedor'
-        sheet['C1'] = 'Comprador'
-        sheet['D1'] = 'N Parcela'
-        sheet['E1'] = 'Valor Parcela'
-        sheet['F1'] = 'Valor Pago'
-        sheet['G1'] = 'Data Vencimento'
-        sheet['H1'] = 'Data Credito'
-        sheet['I1'] = 'Data Procesamento'
-        sheet['J1'] = 'Banco'
-        sheet['K1'] = 'Parcela Paga'
-        sheet['L1'] = 'Total Parcelas'
-        sheet['M1'] = 'Total Quitadas'
-        sheet['N1'] = 'Evento'
-        sheet['O1'] = 'Produto'
-        sheet['P1'] = 'Deposito'
-        sheet['Q1'] = 'Calculo'
-        sheet['R1'] = 'Taxas'
-        sheet['S1'] = 'ADI'
-        sheet['T1'] = 'ME'
-        sheet['U1'] = 'OP'
-        sheet['V1'] = 'Repasses'
-        sheet['W1'] = 'Comissao'
+        """ 
+        <th>Vendedor ID</th>
+        <th>Contrato ID</th>
+        <th>Vendedor</th>
+        <th>Comprador ID</th>
+        <th>Comprador</th>
+        <th>Parcelas Contrato</th>
+        <th>Valor Pago</th>
+        <th>Data Vencimento</th>
+        <th>Data Credito</th>
+        <th>Banco</th>
+        <th>Contrato</th>
+        <th>Evento</th>
+        <th>Deposito</th>
+        <th>Calculo</th>
+        <th>Taxas</th>
+        <th>ADI</th>
+        <th>ME</th>
+        <th>OP</th>
+        <th>Repasses</th>
+        <th>Comissao</th>
+        <th>Total Repasse</th>
+        <th>Dado ID</th>
+        """
+        lista_header_consulta_sql = ['codigo_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador', 'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco', 'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op', 'repasses', 'comissao', 'total_repasse', 'dado_id']
+        for i, value in enumerate(lista_header_consulta_sql):
+            sheet[get_column_letter(i+1)+'1'] = str(value)
+        
+        
         for i, row, in enumerate(json.loads(request.session.get('serialized_data'))):
             for j, value in enumerate(row):
                 sheet.cell(row=i+2, column=j+1, value=value)
@@ -933,7 +958,10 @@ def upload_planilha_dados_brutos(request):
                 linhas += 1
                 continue
             if (row[0] == None or row[0] == '') and (row[1] == None or row[1] == ''):
-                break
+                linhas_nulas += 1
+                if linhas_nulas > 1:
+                    break
+                continue
             linhas += 1
             vendedor_id = row[0]
             contrato_id = row[1]
@@ -957,13 +985,25 @@ def upload_planilha_dados_brutos(request):
             comissao = row[19]
             id_excel = row[21]
             
-            """ try:
-                Dado.objects.get(id_vendedor=id)
-            except:
-                pass
-                 """
-            
             try:
+                dado = Dado.objects.get(id_vendedor=vendedor_id, id_contrato=contrato_id, comprador=comprador, vl_pago=valor)
+                """ altere todos os dados para a atual linha, exceto os id_vendedor=vendedor_id, id_contrato=contrato_id, comprador=comprador, vl_pago=valor """
+                dado.nu_parcela = parcela_paga
+                dado.parcelas_contrato = parcelas_contrato
+                dado.dt_vencimento = data_vencimento
+                dado.dt_credito = data_credito
+                dado.banco = banco
+                dado.contrato = contrato
+                dado.evento = evento
+                dado.deposito = deposito
+                dado.calculo = calc
+                dado.taxas = taxas
+                dado.adi = adi
+                dado.me = me
+                dado.op = op
+                dado.repasses = repasses
+                dado.comissao = comissao
+            except Dado.DoesNotExist:
                 Dado.objects.create(
                 id_vendedor=vendedor_id,
                 id_contrato=contrato_id,
@@ -984,13 +1024,17 @@ def upload_planilha_dados_brutos(request):
                 me=me,
                 op=op,
                 repasses=repasses,
-                comissao=comissao,
-                id_excel=id_excel
+                comissao=comissao
             )
+            except Dado.MultipleObjectsReturned:
+                erros.append(f"Foi encontrado mais de um dado com os mesmos dados na linha {linhas}\n chaves primarias de busca são: id_vendedor={vendedor_id}, id_contrato={contrato_id}, comprador={comprador}, vl_pago={valor}")
             except Exception as e:
-                print('Erro na linha {}, {}'.format(linhas, e))
-                continue
+                erros.append(f"Erro na linha {linhas}, Exception Error:{e}")
             
-
-        return HttpResponse("Planilha recebida com sucesso")
+            
+        erros_html = "<ul>"
+        for erro in erros:
+            erros_html += f"<li>{erro}</li>"
+        erros_html = "</ul>"
+        return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> erros: {}".format(linhas, erros_html))
     return HttpResponse("HTTP REQUEST")
