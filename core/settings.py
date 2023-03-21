@@ -4,6 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os, environ
+import dj_database_url
 
 env = environ.Env(
     # set casting, default value
@@ -102,10 +103,7 @@ if os.environ.get('DB_ENGINE') and os.environ.get('DB_ENGINE') == "mysql":
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'db.sqlite3',
-        }
+        "default":dj_database_url.config(default='sqlite:///db.sqlite3',conn_max_age=600),
     }
     
 """ TODO:
