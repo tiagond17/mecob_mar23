@@ -105,11 +105,7 @@ else:
     DATABASES = {
         "default":dj_database_url.config(default='sqlite:///db.sqlite3',conn_max_age=600),
     }
-    
-""" TODO:
-DATABASES = {
-    "default":dj_database_url.config(default='postgresql://postgres:admin@localhost:5432/desapeguei_project_db',conn_max_age=600)
-}"""
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
